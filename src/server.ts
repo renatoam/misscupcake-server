@@ -1,12 +1,15 @@
+import cors from "cors";
+import dotenv from "dotenv";
 import Express from "express";
+import { mongoConnection } from "./database";
 import router from "./routes";
-import dotenv from "dotenv"
-import cors from "cors"
 
 dotenv.config()
+mongoConnection()
 
 const server = Express()
 
+server.use(Express.json())
 server.use(cors({
   origin: "*"
 }))
