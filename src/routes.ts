@@ -1,7 +1,8 @@
+import { ProductRepository } from "@product/infrastructure/ProductRepository";
+import { createFilter } from "@shared/helpers/filterHelpers";
+import { RawFilter } from "@shared/types/FilterTypes";
 import { Request, Response, Router } from "express";
 import mongoose from 'mongoose';
-import { supabase } from "./database";
-import { ProductRepository } from "./features/shared/product/repositories/ProductRepository";
 
 const router = Router()
 
@@ -104,25 +105,17 @@ router.get('/featured', async (_, response: Response) => {
 
 // create a repo that receives a database (unknown) as argument (dependency injection)
 // so that I can mock the db using vi.fn() to avoid changes on the real db
-router.get('/products', async (req, res) => {
-  const { field } = req.query as any
-  const { data, error, status } = await supabase
-    .from('product')
-    .select(`
-      ${field || '*'},
-      product_price(*),
-      product_availability(*),
-      product_image(*),
-      product_rating(*),
-      product_review(*),
-      product_specification(*)
-    `)
-  
-  if (error) {
-    return res.status(status).json({ error, message: 'Server Error' })
-  }
+router.get('/products', async (request: Request, response: Response) => {
+  const productRepository = new ProductRepository()
+  const rawFilter = request.query as RawFilter
+  const filter = createFilter(rawFilter)
 
-  return res.status(200).json(data)
+  try {
+    const result = await productRepository.getAll(filter)
+    return response.status(200).json(result)
+  } catch (error) {
+    return response.status(500).json({ message: 'Error on getting products' })
+  }
 })
 
 export default router

@@ -1,4 +1,4 @@
-export namespace Product {
+export namespace ProductProps {
   export interface Price {
     current: number;
     discount: number;

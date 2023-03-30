@@ -9,7 +9,15 @@
     "forceConsistentCasingInFileNames": true,
     "strict": true,
     "noImplicitAny": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "baseUrl": ".",
+    "paths": {
+      "@base/*": ["src/modules/base/*"],
+      "@cart/*": ["src/modules/cart/*"],
+      "@product/*": ["src/modules/product/*"],
+      "@shared/*": ["src/modules/shared/*"],
+      "@database": ["src/database"]
+    }
   },
   "include": ["src/**/*"]
 }

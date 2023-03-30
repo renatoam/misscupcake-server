@@ -1,6 +1,6 @@
 import cors from "cors";
 import dotenv from "dotenv";
-import Express from "express";
+import Express, { Response } from "express";
 import { mongoConnection } from "./database";
 import router from "./routes";
 
@@ -14,10 +14,10 @@ server.use(cors({
   origin: "*"
 }))
 
-server.get('/', (_, res) => {
-  return res.send('There is nothing here. Try "/products"')
-})
-
 server.use('/api', router)
+
+server.use((_, response: Response) => {
+  return response.status(404).send('There is nothing here. Try "/products"')
+})
 
 export default server
