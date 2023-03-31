@@ -4,6 +4,8 @@ import { Repository } from "../../base/Repository";
 import { productToDomain } from "../adapters/ProductToDomainAdapter";
 import { ProductProps } from "../domain/ProductProps";
 
+// create a repo that receives a database (unknown) as argument (dependency injection)
+// so that I can mock the db using vi.fn() to avoid changes on the real db
 export class ProductRepository implements Repository<ProductProps.Root> {
   async getAll(filter: Filter = {} as Filter): Promise<ProductProps.Root[]> {
     let query = supabase
@@ -37,12 +39,12 @@ export class ProductRepository implements Repository<ProductProps.Root> {
       const { data: products, error } = await query
 
       if (error) {
-        throw Error(error.message)
+        throw Error(`Error on database query: ${error.message}`)
       }
 
       return products.map(product => productToDomain(product))
     } catch (error) {
-      throw Error('Error on connecting with the database.')
+      throw new Error('Error on connecting with the database.')
     }
   }
 

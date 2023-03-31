@@ -1,6 +1,5 @@
+import { getProducts } from "@product/features/getProducts";
 import { ProductRepository } from "@product/infrastructure/ProductRepository";
-import { createFilter } from "@shared/helpers/filterHelpers";
-import { RawFilter } from "@shared/types/FilterTypes";
 import { Request, Response, Router } from "express";
 import mongoose from 'mongoose';
 
@@ -103,19 +102,6 @@ router.get('/featured', async (_, response: Response) => {
   }
 })
 
-// create a repo that receives a database (unknown) as argument (dependency injection)
-// so that I can mock the db using vi.fn() to avoid changes on the real db
-router.get('/products', async (request: Request, response: Response) => {
-  const productRepository = new ProductRepository()
-  const rawFilter = request.query as RawFilter
-  const filter = createFilter(rawFilter)
-
-  try {
-    const result = await productRepository.getAll(filter)
-    return response.status(200).json(result)
-  } catch (error) {
-    return response.status(500).json({ message: 'Error on getting products' })
-  }
-})
+router.get('/products', getProducts)
 
 export default router
