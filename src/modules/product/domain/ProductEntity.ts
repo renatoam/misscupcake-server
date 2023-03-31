@@ -1,7 +1,7 @@
 import { ProductProps } from "./ProductProps";
 
 export class Product {
-  private props: ProductProps.Root
+  public readonly props: ProductProps.Root
 
   private constructor(props: ProductProps.Root) {
     this.props = props

@@ -1,30 +1,38 @@
 import { Controller } from "@base/Controller";
-import { Result, UseCase } from "@base/UseCase";
-import { ProductProps } from "@product/domain/ProductProps";
+import { ProductUseCase } from "@product/application/ProductUseCase";
 import { createFilter } from "@shared/helpers/filterHelpers";
+import { ok, serverError, serviceUnavailable } from "@shared/helpers/http";
 import { RawFilter } from "@shared/types/FilterTypes";
 import { Request, Response } from "express";
 
 export class GetProductsController implements Controller<Request, Response> {
-  private useCase: UseCase<ProductProps.Root[]>
+  private useCase: ProductUseCase
 
-  constructor(useCase: UseCase<ProductProps.Root[]>) {
+  constructor(useCase: ProductUseCase) {
     this.useCase = useCase
   }
 
   async handle(request: Request, response: Response): Promise<Response> {
     const rawFilter = request.query as RawFilter
     const filter = createFilter(rawFilter)
-  
-    try {
-      const result = await this.useCase.run(filter)
-      return response.status(result.status).json(result.data)
-    } catch (err) {
-      const result = err as Result<Error>
-      return response.status(500).json({
-        message: 'Error on getting products',
-        details: result.error
-      })
+    const resultOrError = await this.useCase.run(filter)
+
+    if (resultOrError.isError()) {
+      const error = resultOrError.getError()
+      const serverErrorResponse = serverError(error)
+      const databaseErrorResponse = serviceUnavailable(error)
+
+      switch (error.name) {
+        case 'QueryError':
+          return response.status(serverErrorResponse.statusCode).json(serverErrorResponse.body)
+        case 'DatabaseError':
+          return response.status(databaseErrorResponse.statusCode).json(databaseErrorResponse.body)
+        default:
+          return response.status(serverErrorResponse.statusCode).json(serverErrorResponse.body)
+      }
     }
+
+    const successResponse = ok(resultOrError.getValue())
+    return response.status(successResponse.statusCode).json(successResponse.body)
   }
 }

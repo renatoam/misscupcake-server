@@ -1,5 +1,5 @@
 import { getProducts } from "@product/features/getProducts";
-import { ProductRepository } from "@product/infrastructure/ProductRepository";
+import { CustomProductRepository } from "@product/infrastructure/CustomProductRepository";
 import { Request, Response, Router } from "express";
 import mongoose from 'mongoose';
 
@@ -89,15 +89,13 @@ router.get('/content/pages', async (request: Request, response: Response) => {
 })
 
 router.get('/featured', async (_, response: Response) => {
-  const productRepository = new ProductRepository()
+  const productRepository = new CustomProductRepository()
 
   try {
     const products = await productRepository.getFeatured()
 
-    return response.status(200).json(products)
+    return response.status(200).json(products.getValue())
   } catch (error) {
-    console.log(error)
-
     return response.status(500).send('Something wrong.')
   }
 })
