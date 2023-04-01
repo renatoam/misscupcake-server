@@ -5,5 +5,5 @@ import { Filter } from "@shared/types/FilterTypes";
 
 export interface ProductRepository extends Repository {
   getAll(filter?: Filter): Promise<Result<ProductProps.Root[], Error>>
-  getFeatured(): Promise<Result<ProductProps.Root[], Error>>
+  getFeatured(limit?: number): Promise<Result<ProductProps.Root[], Error>>
 }

@@ -1,11 +1,9 @@
 import { Controller } from "@base/Controller";
 import { ProductUseCase } from "@product/application/ProductUseCase";
-import { createFilter } from "@shared/helpers/filterHelpers";
 import { ok, serverError, serviceUnavailable } from "@shared/helpers/http";
-import { RawFilter } from "@shared/types/FilterTypes";
 import { HttpRequest, HttpResponse } from "@shared/types/httpTypes";
 
-export class GetProductsController implements Controller {
+export class GetFeaturedController implements Controller {
   private useCase: ProductUseCase
 
   constructor(useCase: ProductUseCase) {
@@ -13,9 +11,8 @@ export class GetProductsController implements Controller {
   }
 
   async handle(request: HttpRequest, response: HttpResponse): Promise<HttpResponse> {
-    const rawFilter = request.query as RawFilter
-    const filter = createFilter(rawFilter)
-    const resultOrError = await this.useCase.run(filter)
+    const { limit } = request.query as { limit: string }
+    const resultOrError = await this.useCase.run(limit)
 
     if (resultOrError.isError()) {
       const error = resultOrError.getError()

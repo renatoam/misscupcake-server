@@ -1,4 +1,5 @@
 import { supabase } from "@database";
+import { FEATURED_DEFAULT_LIMIT } from "@product/constants";
 import { Result } from "@shared/errors";
 import DatabaseError from "@shared/errors/DatabaseError";
 import QueryError from "@shared/errors/QueryError";
@@ -64,7 +65,7 @@ export class CustomProductRepository implements ProductRepository {
     throw new Error("Method not implemented.");
   }
 
-  async getFeatured(): Promise<Result<ProductProps.Root[], Error>> {
+  async getFeatured(limit: number = FEATURED_DEFAULT_LIMIT): Promise<Result<ProductProps.Root[], Error>> {
     try {
       const { data: products, error } = await supabase
       .from('product')
@@ -76,7 +77,7 @@ export class CustomProductRepository implements ProductRepository {
         product_review(*),
         product_specification(*)
       `)
-      .limit(3)
+      .limit(limit)
 
       if (error) {
         const queryError = new QueryError(Error(error.message))

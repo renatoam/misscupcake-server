@@ -1,0 +1,1 @@
+export const FEATURED_DEFAULT_LIMIT = 3
