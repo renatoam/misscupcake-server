@@ -1,20 +1,20 @@
 import { ServerResponse } from "http";
 
-export interface HttpHelperResponse {
+export interface HttpHelperResponse<T = unknown> {
   statusCode: number
-  body: unknown
+  body: T
 }
 
 export interface CookieOptions {
-  maxAge?: number | undefined;
-  signed?: boolean | undefined;
-  expires?: Date | undefined;
-  httpOnly?: boolean | undefined;
-  path?: string | undefined;
-  domain?: string | undefined;
-  secure?: boolean | undefined;
-  encode?: ((val: string) => string) | undefined;
-  sameSite?: boolean | 'lax' | 'strict' | 'none' | undefined;
+  maxAge?: number;
+  signed?: boolean;
+  expires?: Date;
+  httpOnly?: boolean;
+  path?: string;
+  domain?: string;
+  secure?: boolean;
+  encode?: ((val: string) => string);
+  sameSite?: boolean | 'lax' | 'strict' | 'none';
 }
 
 export type Locals = Record<string, any>
@@ -22,7 +22,7 @@ export type Locals = Record<string, any>
 export type Send<ResponseBody = any, T extends ServerResponse = ServerResponse> = (body?: ResponseBody) => T;
 export type ErrorCallback = (error: Error) => void
 
-export interface HttpResponse<ResponseBody = unknown> extends ServerResponse {
+export interface HttpResponse<ResponseBody = any> extends ServerResponse {
   status(code: number): this;
   sendStatus(code: number): this;
   send: Send<ResponseBody, this>;

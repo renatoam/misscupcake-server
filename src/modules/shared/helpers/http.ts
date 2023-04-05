@@ -2,12 +2,12 @@ import { ClientError, ForbiddenError, NotFoundError, ServerError, UnauthorizedEr
 import DatabaseError from "@shared/errors/DatabaseError"
 import { HttpHelperResponse } from "@shared/types/httpTypes"
 
-export const ok = <T>(data: T): HttpHelperResponse => ({
+export const ok = <T>(data: T): HttpHelperResponse<T> => ({
   statusCode: 200,
   body: data
 })
 
-export const created = <T>(data: T): HttpHelperResponse => ({
+export const created = <T>(data: T): HttpHelperResponse<T> => ({
   statusCode: 201,
   body: data
 })

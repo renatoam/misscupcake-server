@@ -1,17 +1,52 @@
 import { supabase } from "@database";
 import { FEATURED_DEFAULT_LIMIT } from "@product/constants";
+import { Product } from "@product/domain/ProductEntity";
 import { Result } from "@shared/errors";
 import DatabaseError from "@shared/errors/DatabaseError";
 import QueryError from "@shared/errors/QueryError";
 import { Filter } from "@shared/types/FilterTypes";
-import { productToDomain } from "../adapters/ProductToDomainAdapter";
-import { ProductProps } from "../domain/ProductProps";
+import { ProductMapper } from "./ProductMapper";
 import { ProductRepository } from "./ProductRepository";
 
 // TODO: create a repo that receives a database (unknown) as argument (dependency injection)
 // so that I can mock the db using vi.fn() to avoid changes on the real db
 export class CustomProductRepository implements ProductRepository {
-  async getAll(filter: Filter = {} as Filter): Promise<Result<ProductProps.Root[], Error>> {
+  private productMapper: ProductMapper
+
+  constructor(productMapper: ProductMapper) {
+    this.productMapper = productMapper
+  }
+
+  async getProductsByIdInBulk(ids: string[]): Promise<Result<Product[], Error>> {
+    try {
+      const { data: products, error } = await supabase
+        .from('product')
+        .select(`*,
+          product_price!inner(*),
+          product_availability!inner(*),
+          product_image(*),
+          product_rating!inner(*),
+          product_review(*),
+          product_specification!inner(*)
+        `)
+        .in('product.id', ids)
+
+      if (error) {
+        const queryError = new QueryError(Error(error.message))
+        return Result.fail<QueryError>(queryError)
+      }
+
+      const adapteeProducts = products.map(product => {
+        return this.productMapper.toDomain(product).getValue()
+      })
+      return Result.success(adapteeProducts)
+    } catch (error) {
+      const databaseError = new DatabaseError(Error())
+      return Result.fail<DatabaseError>(databaseError)
+    }
+  }
+
+  async getAll(filter: Filter = {} as Filter): Promise<Result<Product[], Error>> {
     let query = supabase
     .from('product')
     .select(`*,
@@ -47,7 +82,10 @@ export class CustomProductRepository implements ProductRepository {
         return Result.fail<QueryError>(queryError)
       }
 
-      const adapteeProducts = products.map(product => productToDomain(product))
+      const adapteeProducts = products.map(product => {
+        return this.productMapper.toDomain(product).getValue()
+      })
+
       return Result.success(adapteeProducts)
     } catch (error) {
       const databaseError = new DatabaseError(Error())
@@ -65,7 +103,7 @@ export class CustomProductRepository implements ProductRepository {
     throw new Error("Method not implemented.");
   }
 
-  async getFeatured(limit: number = FEATURED_DEFAULT_LIMIT): Promise<Result<ProductProps.Root[], Error>> {
+  async getFeatured(limit: number = FEATURED_DEFAULT_LIMIT): Promise<Result<Product[], Error>> {
     try {
       const { data: products, error } = await supabase
       .from('product')
@@ -84,7 +122,9 @@ export class CustomProductRepository implements ProductRepository {
         return Result.fail<QueryError>(queryError)
       }
 
-      const adapteeProducts = products.map(product => productToDomain(product))
+      const adapteeProducts = products.map(product => {
+        return this.productMapper.toDomain(product).getValue()
+      })
       return Result.success(adapteeProducts)
     } catch (error) {
       const databaseError = new DatabaseError(Error())

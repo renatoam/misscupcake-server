@@ -1,16 +1,25 @@
-import { ProductProps } from "./ProductProps";
+import { Result } from "@shared/errors";
+import { Availability, ProductProps, Specification } from "./ProductProps";
 
 export class Product {
-  public readonly props: ProductProps.Root
+  public readonly props: ProductProps
 
-  private constructor(props: ProductProps.Root) {
+  private constructor(props: ProductProps) {
     this.props = props
   }
 
-  public static create(props: ProductProps.Root): Product {
+  public static create(props: ProductProps): Result<Product, Error> {
     if (!props.name) throw Error('Name is required.')
 
-    return new Product(props)
+    return Result.success<Product>(new Product(props))
+  }
+
+  public get discountAmount(): number {
+    return (this.unitPrice * this.discountPercent) / 100
+  }
+
+  public get price(): number {
+    return this.unitPrice - this.discountAmount
   }
   
   public get id(): string {
@@ -25,11 +34,15 @@ export class Product {
     return this.props.description
   }
 
-  public get price(): ProductProps.Price {
-    return this.props.price
+  public get unitPrice(): number {
+    return this.props.price.current
   }
 
-  public get availability(): ProductProps.Availability {
+  public get discountPercent(): number {
+    return this.props.price.discount
+  }
+
+  public get availability(): Availability {
     return this.props.availability
   }
 
@@ -45,7 +58,7 @@ export class Product {
     return this.props.reviews
   }
 
-  public get specification(): ProductProps.Specification {
+  public get specification(): Specification {
     return this.props.specification
   }
 }

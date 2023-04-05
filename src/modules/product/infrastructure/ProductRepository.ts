@@ -1,9 +1,10 @@
 import { Repository } from "@base/Repository";
-import { ProductProps } from "@product/domain/ProductProps";
+import { Product } from "@product/domain/ProductEntity";
 import { Result } from "@shared/errors";
 import { Filter } from "@shared/types/FilterTypes";
 
 export interface ProductRepository extends Repository {
-  getAll(filter?: Filter): Promise<Result<ProductProps.Root[], Error>>
-  getFeatured(limit?: number): Promise<Result<ProductProps.Root[], Error>>
+  getAll(filter?: Filter): Promise<Result<Product[], Error>>
+  getFeatured(limit?: number): Promise<Result<Product[], Error>>
+  getProductsByIdInBulk(ids: string[]): Promise<Result<Product[], Error>>
 }
