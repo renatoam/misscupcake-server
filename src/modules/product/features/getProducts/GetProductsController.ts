@@ -2,8 +2,9 @@ import { Controller } from "@base/Controller";
 import { ProductUseCase } from "@product/application/ProductUseCase";
 import { Product } from "@product/domain/ProductEntity";
 import { ProductMapper } from "@product/infrastructure/ProductMapper";
+import { errorHandler } from "@shared/errors/ErrorHandler";
 import { createFilter } from "@shared/helpers/filterHelpers";
-import { ok, serverError, serviceUnavailable } from "@shared/helpers/http";
+import { ok } from "@shared/helpers/http";
 import { Filter, RawFilter } from "@shared/types/FilterTypes";
 import { HttpRequest, HttpResponse } from "@shared/types/httpTypes";
 import { getProductsAdapter } from "./GetProductsAdapter";
@@ -26,18 +27,7 @@ export class GetProductsController implements Controller {
     const resultOrError = await this.useCase.run(filter)
 
     if (resultOrError.isError()) {
-      const error = resultOrError.getError()
-      const serverErrorResponse = serverError(error)
-      const databaseErrorResponse = serviceUnavailable(error)
-
-      switch (error.name) {
-        case 'QueryError':
-          return response.status(serverErrorResponse.statusCode).json(serverErrorResponse.body)
-        case 'DatabaseError':
-          return response.status(databaseErrorResponse.statusCode).json(databaseErrorResponse.body)
-        default:
-          return response.status(serverErrorResponse.statusCode).json(serverErrorResponse.body)
-      }
+      return errorHandler(resultOrError.getError(), request, response)
     }
 
     const rawProducts = resultOrError.getValue()

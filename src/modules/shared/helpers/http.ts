@@ -1,5 +1,6 @@
 import { ClientError, ForbiddenError, NotFoundError, ServerError, UnauthorizedError } from "@shared/errors"
 import DatabaseError from "@shared/errors/DatabaseError"
+import { ErrorBody } from "@shared/types/errorTypes"
 import { HttpHelperResponse } from "@shared/types/httpTypes"
 
 export const ok = <T>(data: T): HttpHelperResponse<T> => ({
@@ -17,32 +18,80 @@ export const noContent = (): HttpHelperResponse => ({
   body: null
 })
 
-export const badRequest = (error?: Error): HttpHelperResponse => ({
-  statusCode: 400,
-  body: new ClientError(error)
-})
+export const badRequest = (error?: Error): HttpHelperResponse<ErrorBody> => {
+  const customError = new ClientError(error)
 
-export const unauthorized = (error?: Error): HttpHelperResponse => ({
-  statusCode: 401,
-  body: new UnauthorizedError(error)
-})
+  return {
+    statusCode: 400,
+    body: {
+      ...customError,
+      name: customError.name,
+      message: customError.message,
+    }
+  }
+}
 
-export const forbidden = (error?: Error): HttpHelperResponse => ({
-  statusCode: 403,
-  body: new ForbiddenError(error)
-})
+export const unauthorized = (error?: Error): HttpHelperResponse<ErrorBody> => {
+  const customError = new UnauthorizedError(error)
 
-export const notFound = (error?: Error): HttpHelperResponse => ({
-  statusCode: 404,
-  body: new NotFoundError(error)
-})
+  return {
+    statusCode: 401,
+    body: {
+      ...customError,
+      name: customError.name,
+      message: customError.message,
+    }
+  }
+}
 
-export const serverError = (error?: Error): HttpHelperResponse => ({
-  statusCode: 500,
-  body: new ServerError(error)
-})
+export const forbidden = (error?: Error): HttpHelperResponse<ErrorBody> => {
+  const customError = new ForbiddenError(error)
 
-export const serviceUnavailable = (error?: Error): HttpHelperResponse => ({
-  statusCode: 503,
-  body: new DatabaseError(error)
-})
+  return {
+    statusCode: 403,
+    body: {
+      ...customError,
+      name: customError.name,
+      message: customError.message,
+    }
+  }
+}
+
+export const notFound = (error?: Error): HttpHelperResponse<ErrorBody> => {
+  const customError = new NotFoundError(error)
+
+  return {
+    statusCode: 404,
+    body: {
+      ...customError,
+      name: customError.name,
+      message: customError.message,
+    }
+  }
+}
+
+export const serverError = (error?: Error): HttpHelperResponse<ErrorBody> => {
+  const customError = new ServerError(error)
+
+  return {
+    statusCode: 500,
+    body: {
+      ...customError,
+      name: customError.name,
+      message: customError.message,
+    }
+  }
+}
+
+export const serviceUnavailable = (error?: Error): HttpHelperResponse<ErrorBody> => {
+  const customError = new DatabaseError(error)
+
+  return {
+    statusCode: 503,
+    body: {
+      ...customError,
+      name: customError.name,
+      message: customError.message,
+    }
+  }
+}
