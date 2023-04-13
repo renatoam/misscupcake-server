@@ -1,5 +1,5 @@
 import { Product } from "@product/domain/ProductEntity";
-import { GetProductsDTO } from "./GetProductsDTO";
+import { GetProductsDTO } from "../features/getProducts/GetProductsDTO";
 
 export function getProductsAdapter(product: Product): GetProductsDTO {
   return {

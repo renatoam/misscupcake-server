@@ -1,7 +1,7 @@
 import { ProductProps } from "@product/domain/ProductProps";
 import { PersistenceProductProps } from "../domain/PersistenceProductProps";
 
-export function productToDomain(persistence: PersistenceProductProps): ProductProps {
+export function productToDomainAdapter(persistence: PersistenceProductProps): ProductProps {
   const images = persistence.product_image.map(img => img.image_url)
   const reviews = persistence.product_review.map(review => review.review)
   const { price, discount } = { ...persistence.product_price[0] }
