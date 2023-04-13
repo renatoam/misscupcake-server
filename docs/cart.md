@@ -28,6 +28,8 @@ Estando logado (account ID) ou não (guest ID) o cart é controlado via servidor
 
 - Anônimo abre novamente o browser
 	- Guest ID e carrinho são recuperados do IndexedDB
+    - Servidor verifica que carrinho está ativo
+    - Neste caso (verificar se carrinho está ativo), estamos considerando a possibilidade do usuário poder fechar uma compra sem se logar, porque aí teríamos mais status para o carrinho além de "ativo"
   - Carrinho é reidratado com os dados atualizados do servidor (Get Cart?*)
 
 > *: se o usuário nunca chegou na tela de carrinho, não vai ter usado o Load Cart. Nesse caso, usamos o Add to Cart, que no caso de já haver um carrinho criado, apenas o atualiza.
@@ -62,8 +64,10 @@ Estando logado (account ID) ou não (guest ID) o cart é controlado via servidor
   - Se guest ID for inválido, retorna mensagem de erro
 
 - Servidor verifica que há um carrinho associado ao guest ID
+  - Servidor verifica que carrinho está ativo
 
 - Servidor verifica que _também_ há um carrinho associado ao account ID
+  - Servidor verifica que carrinho está ativo
 
 - Servidor verifica que o cart ID associado a ambos é o mesmo
 
@@ -97,6 +101,7 @@ Estando logado (account ID) ou não (guest ID) o cart é controlado via servidor
   - Se guest ID for inválido, retorna mensagem de erro
 
 - Servidor verifica se há um carrinho associado ao guest ID*
+  - Servidor verifica que carrinho está ativo
 
 - Servidor verifica que _não há*_ um carrinho associado ao account ID
   - O cenário cujo account ID tem carrinho associado é contemplado no **4**
@@ -135,10 +140,10 @@ Estando logado (account ID) ou não (guest ID) o cart é controlado via servidor
   - Se guest ID for inválido, retorna mensagem de erro
 
 - Servidor verifica que há um carrinho associado ao guest ID
+  - Servidor verifica que carrinho está ativo
 
 - Servidor verifica que _também_ há um carrinho associado ao account ID
-
-- Servidor verifica que o cart ID associado a ambos é o mesmo
+  - Servidor verifica que carrinho está ativo
 
 - Servidor verifica que são diferentes
 
@@ -150,3 +155,7 @@ Estando logado (account ID) ou não (guest ID) o cart é controlado via servidor
   - Decidir como será feita essa comunicação
 
 - Carrinho é carregado normalmente
+
+## Cenário 2 e 4
+
+Nos cenários 2 e 4, o servidor busca por carrinhos associados aos account e guest IDs. É possível que encontre um, nenhum, ou mais de um carrinho. Isso, porque os carrinhos tem status: New, Cart, Checkout, Paid, Complete e Abandoned.
