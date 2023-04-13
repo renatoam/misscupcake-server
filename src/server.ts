@@ -1,29 +1,38 @@
 import cors from "cors";
 import dotenv from "dotenv";
-import Express, { Response } from "express";
-import { mongoConnection } from "./database";
-import router from "./routes";
+import Express, { Response, Router } from "express";
 
-let corsOrigin = process.env.CLIENT_URL
-
-if (process.env.NODE_ENV !== 'production') {
-  dotenv.config()
-  corsOrigin = "*"
+interface AppProps {
+  connections: Function[]
+  router: Router
 }
 
-mongoConnection()
+function app({ connections, router }: AppProps) {
+  let corsOrigin = process.env.CLIENT_URL
 
-const server = Express()
+  if (process.env.NODE_ENV !== 'production') {
+    dotenv.config()
+    corsOrigin = "*"
+  }
 
-server.use(Express.json())
-server.use(cors({
-  origin: corsOrigin
-}))
+  connections.forEach(connect => {
+    connect()
+  })
 
-server.use('/api/v1', router)
+  const server = Express()
 
-server.use((_, response: Response) => {
-  return response.status(404).send('There is nothing here. Try "/products"')
-})
+  server.use(Express.json())
+  server.use(cors({
+    origin: corsOrigin
+  }))
 
-export default server
+  server.use('/api/v1', router)
+
+  server.use((_, response: Response) => {
+    return response.status(404).send('There is nothing here. Try "/products"')
+  })
+  
+  return server
+}
+
+export default app
