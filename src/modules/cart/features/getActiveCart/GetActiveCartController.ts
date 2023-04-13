@@ -105,15 +105,58 @@ export class GetActiveCartController implements Controller {
       }
     }
 
-    // temp: user should decide whether guest or account
-    const newCart: SimpleCartResponseDTO = {
-      cartId: activeAccountCart?.id.toString() || activeGuestCart?.id.toString() || '1123',
-      accountId: 'map account id in cart entity',
-      subtotal: 0,
-      total: 0,
-      items: []
+    if (!accountId && guestId) {
+      const guestCartsOrError = await this.repository.getCartsByCustomerId(guestId)
+
+      if (guestCartsOrError.isError()) {
+        return errorHandler(guestCartsOrError.getError())
+      }
+
+      activeGuestCart = guestCartsOrError.getValue().find(cart => cart.status === 'active')
+
+      if (!activeGuestCart) {
+        const notFoundResponse = notFound(
+          new NotFoundError(Error('There is no active cart associated to this account.'))
+        )
+
+        return response.status(notFoundResponse.statusCode).json(notFoundResponse.body)
+      }
+
+      const successResponse = ok<SimpleCartResponseDTO>({
+        cartId: activeGuestCart.id.toString(),
+        accountId: guestId,
+        subtotal: activeGuestCart.subtotal,
+        total: activeGuestCart.total,
+        items: activeGuestCart.items
+      })
+
+      return response.status(successResponse.statusCode).json(successResponse.body)
     }
     
-    return response.status(200).json(newCart)
+    const accountCartsOrError = await this.repository.getCartsByCustomerId(accountId!)
+
+      if (accountCartsOrError.isError()) {
+        return errorHandler(accountCartsOrError.getError())
+      }
+
+      activeAccountCart = accountCartsOrError.getValue().find(cart => cart.status === 'active')
+
+      if (!activeAccountCart) {
+        const notFoundResponse = notFound(
+          new NotFoundError(Error('There is no active cart associated to this account.'))
+        )
+
+        return response.status(notFoundResponse.statusCode).json(notFoundResponse.body)
+      }
+
+      const successResponse = ok<SimpleCartResponseDTO>({
+        cartId: activeAccountCart.id.toString(),
+        accountId: accountId!,
+        subtotal: activeAccountCart.subtotal,
+        total: activeAccountCart.total,
+        items: activeAccountCart.items
+      })
+
+      return response.status(successResponse.statusCode).json(successResponse.body)
   }
 }

@@ -94,6 +94,62 @@ describe('GetActiveCartController', () => {
     })
   })
 
+  describe('guest ID is provided but no account ID', () => {
+    it('should return a cart in proper format if guest ID has an active cart associated',
+      async () => {
+        mockMethod.mockResolvedValue(mockPositiveValue)
+        const response = await request(server)
+          .get(`${baseURL}?guestId=${guestId}`)
+        const result: SimpleCartResponseDTO = response.body
+
+        expect(result.cartId).toBeDefined()
+        expect(result.accountId).toBeDefined()
+        expect(result.subtotal).toBeDefined()
+        expect(result.total).toBeDefined()
+        expect(result.items).toBeDefined()
+        expect(result.accountId).toBe(guestId)
+      }
+    )
+
+    it('should return a 404 status code if there is no active cart associated to the guest ID',
+      async () => {
+        mockMethod.mockResolvedValue(Result.fail(new NotFoundError()))
+        const response = await request(server)
+          .get(`${baseURL}?guestId=${guestId}`)
+
+        expect(response.status).toBe(404)
+      }
+    )
+  })
+  
+  describe('account ID is provided but no guest ID', () => {
+    it('should return a cart in proper format if account ID has an active cart associated',
+      async () => {
+        mockMethod.mockResolvedValue(mockPositiveValue)
+        const response = await request(server)
+          .get(`${baseURL}?accountId=${accountId}`)
+        const result: SimpleCartResponseDTO = response.body
+
+        expect(result.cartId).toBeDefined()
+        expect(result.accountId).toBeDefined()
+        expect(result.subtotal).toBeDefined()
+        expect(result.total).toBeDefined()
+        expect(result.items).toBeDefined()
+        expect(result.accountId).toBe(accountId)
+      }
+    )
+
+    it('should return a 404 status code if there is no active cart associated to the account ID',
+      async () => {
+        mockMethod.mockResolvedValue(Result.fail(new NotFoundError()))
+        const response = await request(server)
+          .get(`${baseURL}?accountId=${accountId}`)
+
+        expect(response.status).toBe(404)
+      }
+    )
+  })
+
   describe('account ID or guest ID are not properly provided', () => {
     it('should return a status code 400 if account and guest IDs are not provided', async () => {
       const response = await request(server).get(`${baseURL}`)
