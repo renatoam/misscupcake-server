@@ -1,13 +1,13 @@
 import { Controller } from "@base/Controller";
+import { getProductsAdapter } from "@product/adapters/GetProductsAdapter";
 import { ProductUseCase } from "@product/application/ProductUseCase";
 import { Product } from "@product/domain/ProductEntity";
 import { ProductMapper } from "@product/infrastructure/ProductMapper";
-import { errorHandler } from "@shared/errors/ErrorHandler";
+import { errorResponseHandler } from "@shared/errors/ErrorHandler";
 import { createFilter } from "@shared/helpers/filterHelpers";
 import { ok } from "@shared/helpers/http";
 import { Filter, RawFilter } from "@shared/types/FilterTypes";
 import { HttpRequest, HttpResponse } from "@shared/types/httpTypes";
-import { getProductsAdapter } from "./GetProductsAdapter";
 
 export class GetProductsController implements Controller {
   private useCase: ProductUseCase<Filter, Product>
@@ -25,9 +25,10 @@ export class GetProductsController implements Controller {
     const rawFilter = request.query as RawFilter
     const filter = createFilter(rawFilter)
     const resultOrError = await this.useCase.run(filter)
+    const errorHandler = errorResponseHandler(response)
 
     if (resultOrError.isError()) {
-      return errorHandler(resultOrError.getError(), request, response)
+      return errorHandler(resultOrError.getError())
     }
 
     const rawProducts = resultOrError.getValue()
