@@ -17,6 +17,7 @@
       "@content/*": ["src/modules/content/*"],
       "@product/*": ["src/modules/product/*"],
       "@shared/*": ["src/modules/shared/*"],
+      "@middlewares/*": ["src/middlewares/*"],
       "@database": ["src/database"]
     }
   },
