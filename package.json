@@ -6,7 +6,8 @@
     "dev": "tsx src/index.ts",
     "dev:watch": "tsx watch src/index.ts",
     "build": "NODE_ENV=production tsup src",
-    "start": "NODE_ENV=production node dist/index.js"
+    "start": "NODE_ENV=production node dist/index.js",
+    "test": "vitest"
   },
   "keywords": [],
   "author": "",
