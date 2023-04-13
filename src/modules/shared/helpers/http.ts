@@ -1,4 +1,4 @@
-import { ClientError, ForbiddenError, NotFoundError, ServerError, UnauthorizedError } from "@shared/errors"
+import { ClientError, ConflictError, ForbiddenError, NotFoundError, ServerError, UnauthorizedError } from "@shared/errors"
 import DatabaseError from "@shared/errors/DatabaseError"
 import { ErrorBody } from "@shared/types/errorTypes"
 import { HttpHelperResponse } from "@shared/types/httpTypes"
@@ -62,6 +62,19 @@ export const notFound = (error?: Error): HttpHelperResponse<ErrorBody> => {
 
   return {
     statusCode: 404,
+    body: {
+      ...customError,
+      name: customError.name,
+      message: customError.message,
+    }
+  }
+}
+
+export const conflict = (error?: Error): HttpHelperResponse<ErrorBody> => {
+  const customError = new ConflictError(error)
+
+  return {
+    statusCode: 409,
     body: {
       ...customError,
       name: customError.name,

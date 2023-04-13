@@ -36,10 +36,10 @@ export interface HttpResponse<ResponseBody = any> extends ServerResponse {
   locals: Locals;
 }
 
-export interface HttpRequest {
-  body: unknown,
+export interface HttpRequest<Body = unknown, Query = unknown, Params = unknown> {
+  body: Body,
   cookies: Record<string, unknown>,
   headers: Record<string, unknown>,
-  params: Record<string, unknown>,
-  query: Record<string, unknown>
+  params: Record<string, Params>,
+  query: Query | Record<string, string>
 }
