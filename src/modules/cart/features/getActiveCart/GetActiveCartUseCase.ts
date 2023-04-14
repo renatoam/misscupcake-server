@@ -11,20 +11,13 @@ export class GetActiveCartUseCase implements CartUseCase<string, Cart> {
   }
 
   async run(customerId: string): Promise<Result<Cart, Error>> {
-    const cartsOrError = await this.repository.getCartsByCustomerId(customerId)
+    const activeCartOrError = await this.repository.getActiveCart(customerId)
 
-    if (cartsOrError.isError()) {
-      return Result.fail(cartsOrError.getError())
-    }
-
-    const carts = cartsOrError.getValue()
-    const activeCart = carts.find(cart => cart.status === 'active')
-
-    if (!activeCart) {
-      const notFoundError = new NotFoundError(Error('There is no active cart for this ID.'))
+    if (activeCartOrError.isError()) {
+      const notFoundError = new NotFoundError(activeCartOrError.getError())
       return Result.fail(notFoundError)
     }
 
-    return Result.success(activeCart)
+    return Result.success(activeCartOrError.getValue())
   }
 }

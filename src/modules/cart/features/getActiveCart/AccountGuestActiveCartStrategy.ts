@@ -2,8 +2,8 @@ import { simpleCartDTOAdapter } from "@cart/adapters/SimpleCartDTOAdapter";
 import { ActiveCartStrategy, CustomerParams } from "@cart/application/ActiveCartStrategy";
 import { CartUseCase } from "@cart/application/CartUseCase";
 import { Cart } from "@cart/domain/CartEntity";
+import { SimpleCartResponseDTO } from "@cart/domain/CartProps";
 import { ConflictError, Result } from "@shared/errors";
-import { SimpleCartResponseDTO } from "../addToCart/AddToCartProps";
 
 export class AccountGuestActiveCartStrategy implements ActiveCartStrategy {
   private getActiveCartUseCase: CartUseCase<string, Cart>
@@ -32,7 +32,7 @@ export class AccountGuestActiveCartStrategy implements ActiveCartStrategy {
     const isDifferentActiveCart = !activeGuestCart.id.equals(activeAccountCart.id)
 
     const shouldReturnAccountCart = isTheSameActiveCart || use === 'account'
-
+    
     if (shouldReturnAccountCart) {
       const activeCart = simpleCartDTOAdapter(activeAccountCart)
       return Result.success(activeCart)

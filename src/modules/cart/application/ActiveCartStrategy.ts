@@ -1,4 +1,5 @@
-import { SimpleCartResponseDTO } from "@cart/features/addToCart/AddToCartProps";
+
+import { SimpleCartResponseDTO } from "@cart/domain/CartProps";
 import { Result } from "@shared/errors";
 
 export interface CustomerParams {

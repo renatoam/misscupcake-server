@@ -1,23 +1,27 @@
 import { Controller } from "@base/Controller";
+import { simpleCartItemDTOAdapter } from "@cart/adapters/SimpleCartDTOAdapter";
+import { CartUseCase } from "@cart/application/CartUseCase";
+import { Cart } from "@cart/domain/CartEntity";
+import { SimpleCartResponseDTO } from "@cart/domain/CartProps";
 import { CartRepository } from "@cart/infrastructure/CartRepository";
-import { ConflictError, NotFoundError } from "@shared/errors";
+import { NotFoundError } from "@shared/errors";
 import { errorResponseHandler } from "@shared/errors/ErrorHandler";
-import { conflict, notFound, ok } from "@shared/helpers/http";
+import { notFound, ok } from "@shared/helpers/http";
 import { HttpRequest, HttpResponse } from "@shared/types/httpTypes";
-import { SimpleCartResponseDTO } from "../addToCart/AddToCartProps";
+import { AccountGuestActiveCartStrategy } from "./AccountGuestActiveCartStrategy";
 
 export type CustomerId = { accountId?: string, guestId?: string, use?: 'guest' | 'account' }
 
 export class GetActiveCartController implements Controller {
-  // private getByCustomerUseCase: CartUseCase<string, Cart>
-
-  // constructor(getByCustomerUseCase: CartUseCase<string, Cart>) {
-  //   this.getByCustomerUseCase = getByCustomerUseCase
-  // }
-
+  private getActiveCartUseCase: CartUseCase<string, Cart>
   private repository: CartRepository
-  constructor(repository: CartRepository) {
+  
+  constructor(
+    repository: CartRepository,
+    getActiveCartUseCase: CartUseCase<string, Cart>
+  ) {
     this.repository = repository
+    this.getActiveCartUseCase = getActiveCartUseCase
   }
 
   async handle(
@@ -26,83 +30,21 @@ export class GetActiveCartController implements Controller {
   ): Promise<HttpResponse> {
     const { accountId, guestId, use } = request.query
     const errorHandler = errorResponseHandler(response)
+    const accountGuestActiveCartStrategy = new AccountGuestActiveCartStrategy(this.getActiveCartUseCase)
 
     let activeGuestCart
     let activeAccountCart
     
     if (accountId && guestId) {
-
-      const guestCartsOrError = await this.repository.getCartsByCustomerId(guestId)
-      const accountCartsOrError = await this.repository.getCartsByCustomerId(accountId)
-
-      if (guestCartsOrError.isError()) {
-        return errorHandler(guestCartsOrError.getError())
-      }
+      const activeCartOrError = await accountGuestActiveCartStrategy
+        .getActiveCart({ accountId, guestId, use })
       
-      if (accountCartsOrError.isError()) {
-        return errorHandler(accountCartsOrError.getError())
+      if (activeCartOrError.isError()) {
+        return errorHandler(activeCartOrError.getError())
       }
 
-      // this filtering should live in use case
-      activeGuestCart = guestCartsOrError.getValue().find(cart => cart.status === 'active')
-      activeAccountCart = accountCartsOrError.getValue().find(cart => cart.status === 'active')
-
-      // send those error to the error handler
-      if (!activeGuestCart && !activeAccountCart) {
-        const notFoundResponse = notFound(
-          new NotFoundError(Error('There is no active cart associated to this account.'))
-        )
-        return response.status(notFoundResponse.statusCode).json(notFoundResponse.body)
-      }
-
-      if (activeGuestCart && activeAccountCart) {
-        if (activeGuestCart.id === activeAccountCart.id) {
-          // use an adapter here
-          const successResponse = ok<SimpleCartResponseDTO>({
-            cartId: activeAccountCart.id.toString(),
-            accountId: accountId,
-            subtotal: activeAccountCart.subtotal,
-            total: activeAccountCart.total,
-            items: activeAccountCart.items
-          })
-
-          return response.status(successResponse.statusCode).json(successResponse.body)
-        }
-
-        if (activeGuestCart.id !== activeAccountCart.id) {
-          if (use === 'guest') {
-            // use an adapter here
-            const successResponse = ok<SimpleCartResponseDTO>({
-              cartId: activeGuestCart.id.toString(),
-              accountId: guestId,
-              subtotal: activeGuestCart.subtotal,
-              total: activeGuestCart.total,
-              items: activeGuestCart.items
-            })
-
-            return response.status(successResponse.statusCode).json(successResponse.body)
-          }
-          
-          if (use === 'account') {
-            // use an adapter here
-            const successResponse = ok<SimpleCartResponseDTO>({
-              cartId: activeAccountCart.id.toString(),
-              accountId: accountId,
-              subtotal: activeAccountCart.subtotal,
-              total: activeAccountCart.total,
-              items: activeAccountCart.items
-            })
-
-            return response.status(successResponse.statusCode).json(successResponse.body)
-          }
-
-          const conflictResponse = conflict(
-            new ConflictError(Error('It seems there is already a cart created for your account. What you would like to do?'))
-          )
-
-          return response.status(conflictResponse.statusCode).json(conflictResponse.body)
-        }
-      }
+      const successResponse = ok<SimpleCartResponseDTO>(activeCartOrError.getValue())
+      return response.status(successResponse.statusCode).json(successResponse.body)
     }
 
     if (!accountId && guestId) {
@@ -127,7 +69,7 @@ export class GetActiveCartController implements Controller {
         accountId: guestId,
         subtotal: activeGuestCart.subtotal,
         total: activeGuestCart.total,
-        items: activeGuestCart.items
+        items: activeGuestCart.items.map(item => simpleCartItemDTOAdapter(item))
       })
 
       return response.status(successResponse.statusCode).json(successResponse.body)
@@ -135,28 +77,28 @@ export class GetActiveCartController implements Controller {
     
     const accountCartsOrError = await this.repository.getCartsByCustomerId(accountId!)
 
-      if (accountCartsOrError.isError()) {
-        return errorHandler(accountCartsOrError.getError())
-      }
+    if (accountCartsOrError.isError()) {
+      return errorHandler(accountCartsOrError.getError())
+    }
 
-      activeAccountCart = accountCartsOrError.getValue().find(cart => cart.status === 'active')
+    activeAccountCart = accountCartsOrError.getValue().find(cart => cart.status === 'active')
 
-      if (!activeAccountCart) {
-        const notFoundResponse = notFound(
-          new NotFoundError(Error('There is no active cart associated to this account.'))
-        )
+    if (!activeAccountCart) {
+      const notFoundResponse = notFound(
+        new NotFoundError(Error('There is no active cart associated to this account.'))
+      )
 
-        return response.status(notFoundResponse.statusCode).json(notFoundResponse.body)
-      }
+      return response.status(notFoundResponse.statusCode).json(notFoundResponse.body)
+    }
 
-      const successResponse = ok<SimpleCartResponseDTO>({
-        cartId: activeAccountCart.id.toString(),
-        accountId: accountId!,
-        subtotal: activeAccountCart.subtotal,
-        total: activeAccountCart.total,
-        items: activeAccountCart.items
-      })
+    const successResponse = ok<SimpleCartResponseDTO>({
+      cartId: activeAccountCart.id.toString(),
+      accountId: accountId!,
+      subtotal: activeAccountCart.subtotal,
+      total: activeAccountCart.total,
+      items: activeAccountCart.items.map(item => simpleCartItemDTOAdapter(item))
+    })
 
-      return response.status(successResponse.statusCode).json(successResponse.body)
+    return response.status(successResponse.statusCode).json(successResponse.body)
   }
 }

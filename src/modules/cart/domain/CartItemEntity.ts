@@ -13,6 +13,10 @@ export class CartItem extends Entity<CartItemProps> {
     return Result.success(newCartItem)
   }
 
+  public get id(): UniqueEntityID {
+    return this._id
+  }
+
   public get name(): string {
     return this.props.name
   }

@@ -1,4 +1,4 @@
-import { badRequest, notFound, serverError, serviceUnavailable } from "@shared/helpers/http";
+import { badRequest, conflict, notFound, serverError, serviceUnavailable } from "@shared/helpers/http";
 import { ErrorBody } from "@shared/types/errorTypes";
 import { HttpResponse } from "@shared/types/httpTypes";
 
@@ -7,6 +7,7 @@ export function errorResponseHandler(
 ): (error: Error) => HttpResponse<ErrorBody> {
   return (error: Error): HttpResponse<ErrorBody> => {
     const badRequestResponse = badRequest(error)
+    const conflictError = conflict(error)
     const notFoundErrorResponse = notFound(error)
     const serverErrorResponse = serverError(error)
     const databaseErrorResponse = serviceUnavailable(error)
@@ -17,6 +18,12 @@ export function errorResponseHandler(
         return response
           .status(badRequestResponse.statusCode)
           .json(badRequestResponse.body)
+      
+      case 'ConflictError':
+        console.error(`${error.name}: ${error.message}`)
+        return response
+          .status(conflictError.statusCode)
+          .json(conflictError.body)
       
       case 'NotFoundError':
         console.error(`${error.name}: ${error.message}`)

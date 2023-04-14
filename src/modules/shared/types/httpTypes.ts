@@ -40,6 +40,6 @@ export interface HttpRequest<Body = unknown, Query = unknown, Params = unknown> 
   body: Body,
   cookies: Record<string, unknown>,
   headers: Record<string, unknown>,
-  params: Record<string, Params>,
-  query: Query | Record<string, string>
+  params: Params,
+  query: Query
 }

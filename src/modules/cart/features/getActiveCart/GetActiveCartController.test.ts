@@ -1,6 +1,9 @@
 import { Identifier } from "@base/Identifier";
+import { UniqueEntityID } from "@base/UniqueEntityID";
+import { CartUseCase } from "@cart/application/CartUseCase";
 import { Cart } from "@cart/domain/CartEntity";
 import { CartItem } from "@cart/domain/CartItemEntity";
+import { SimpleCartResponseDTO } from "@cart/domain/CartProps";
 import { CartRepository } from "@cart/infrastructure/CartRepository";
 import { validateCustomerId } from "@middlewares/cart/getActiveCartMiddleware";
 import { NotFoundError, Result } from "@shared/errors";
@@ -8,13 +11,11 @@ import { Router } from "express";
 import createServer from "src/server";
 import request from "supertest";
 import { Mock, beforeEach, describe, expect, it, vitest } from "vitest";
-import { SimpleCartResponseDTO } from "../addToCart/AddToCartProps";
 import { GetActiveCartController } from "./GetActiveCartController";
 
 const router = Router()
 const mongoConnection = vitest.fn()
 
-// actually, I need to mock the use case later
 const cartRepositoryMock: CartRepository = {
   getCartsByCustomerId: vitest.fn(),
   getAll: vitest.fn(),
@@ -24,7 +25,15 @@ const cartRepositoryMock: CartRepository = {
   getActiveCart: vitest.fn()
 }
 
-const getActiveCartController = new GetActiveCartController(cartRepositoryMock)
+const getActiveCartUseCaseMock: CartUseCase<string, Cart> = {
+  run: vitest.fn()
+}
+
+const getActiveCartController = new GetActiveCartController(
+  cartRepositoryMock,
+  getActiveCartUseCaseMock
+)
+
 router.get('/carts', validateCustomerId, (request, response) => getActiveCartController.handle(request, response))
 
 const appServer = createServer({
@@ -38,19 +47,29 @@ describe('GetActiveCartController', () => {
   const accountId = '550e8400-e29b-41d4-a716-446655440001'
   const guestId = '550e8400-e29b-41d4-a716-446655440002'
 
-  const newId = new Identifier(123)
-  const newCartItem = CartItem.create({ id: 1 } as any)
-  const newCart = Cart.create({ status: 'active', items: [newCartItem as any] }, newId).getValue()
-  const mockPositiveValue = Result.success([newCart])
-  const mockMethod = cartRepositoryMock.getCartsByCustomerId as Mock
+  const newCartId = new UniqueEntityID(123)
+  const newCartItem = CartItem.create({ name: 'mockItem' } as any, new UniqueEntityID(987))
+  const newCartProps = {
+    accountId: new UniqueEntityID(guestId),
+    status: 'active',
+    items: [newCartItem.getValue() as any]
+  }
+  const newCart = Cart.create(newCartProps, newCartId).getValue()
+
+  const repoMockOkValue = Result.success([newCart])
+  const useCaseMockOkValue = Result.success(newCart)
+  const useCaseMockFailValue = Result.fail(new NotFoundError())
+
+  const repoMockMethod = cartRepositoryMock.getCartsByCustomerId as Mock
+  const useCaseMockMethod = getActiveCartUseCaseMock.run as Mock
 
   describe('account ID or guest ID are properly provided', () => {
     beforeEach(() => {
-      mockMethod.mockReset()
+      repoMockMethod.mockReset()
     })
 
     it('should return status code 200', async () => {
-      mockMethod.mockResolvedValue(mockPositiveValue)
+      useCaseMockMethod.mockResolvedValue(useCaseMockOkValue)
       const response = await request(server)
         .get(`${baseURL}?accountId=${accountId}&guestId=${guestId}`)
 
@@ -58,7 +77,7 @@ describe('GetActiveCartController', () => {
     })
 
     it('should return a content json type in the response', async () => {
-      mockMethod.mockResolvedValue(mockPositiveValue)
+      useCaseMockMethod.mockResolvedValue(useCaseMockOkValue)
       const response = await request(server)
         .get(`${baseURL}?accountId=${accountId}&guestId=${guestId}`)
 
@@ -66,19 +85,20 @@ describe('GetActiveCartController', () => {
     })
 
     it('should return the active cart in proper format if it is found', async () => {
-      mockMethod.mockResolvedValue(mockPositiveValue)
+      useCaseMockMethod.mockResolvedValue(useCaseMockOkValue)
       const response = await request(server)
         .get(`${baseURL}?accountId=${accountId}&guestId=${guestId}`)
+      const result = response.body as SimpleCartResponseDTO
 
-      expect(response.body.cartId).toBeDefined()
-      expect(response.body.accountId).toBeDefined()
-      expect(response.body.subtotal).toBeDefined()
-      expect(response.body.total).toBeDefined()
-      expect(response.body.items).toBeDefined()
+      expect(result.cartId).toBeDefined()
+      expect(result.accountId).toBeDefined()
+      expect(result.subtotal).toBeDefined()
+      expect(result.total).toBeDefined()
+      expect(result.items).toBeDefined()
     })
 
     it('should return status code 404 if no active cart is found', async () => {
-      mockMethod.mockResolvedValue(Result.fail(new NotFoundError()))
+      useCaseMockMethod.mockResolvedValue(useCaseMockFailValue)
       const response = await request(server)
         .get(`${baseURL}?accountId=${accountId}&guestId=${guestId}`)
 
@@ -86,7 +106,7 @@ describe('GetActiveCartController', () => {
     })
 
     it('should return status code 404 if no cart at all is found', async () => {
-      mockMethod.mockResolvedValue(Result.fail(new NotFoundError()))
+      useCaseMockMethod.mockResolvedValue(useCaseMockFailValue)
       const response = await request(server)
         .get(`${baseURL}?accountId=${accountId}&guestId=${guestId}`)
 
@@ -97,7 +117,7 @@ describe('GetActiveCartController', () => {
   describe('guest ID is provided but no account ID', () => {
     it('should return a cart in proper format if guest ID has an active cart associated',
       async () => {
-        mockMethod.mockResolvedValue(mockPositiveValue)
+        repoMockMethod.mockResolvedValue(repoMockOkValue)
         const response = await request(server)
           .get(`${baseURL}?guestId=${guestId}`)
         const result: SimpleCartResponseDTO = response.body
@@ -113,7 +133,7 @@ describe('GetActiveCartController', () => {
 
     it('should return a 404 status code if there is no active cart associated to the guest ID',
       async () => {
-        mockMethod.mockResolvedValue(Result.fail(new NotFoundError()))
+        repoMockMethod.mockResolvedValue(Result.fail(new NotFoundError()))
         const response = await request(server)
           .get(`${baseURL}?guestId=${guestId}`)
 
@@ -125,7 +145,7 @@ describe('GetActiveCartController', () => {
   describe('account ID is provided but no guest ID', () => {
     it('should return a cart in proper format if account ID has an active cart associated',
       async () => {
-        mockMethod.mockResolvedValue(mockPositiveValue)
+        repoMockMethod.mockResolvedValue(repoMockOkValue)
         const response = await request(server)
           .get(`${baseURL}?accountId=${accountId}`)
         const result: SimpleCartResponseDTO = response.body
@@ -141,7 +161,7 @@ describe('GetActiveCartController', () => {
 
     it('should return a 404 status code if there is no active cart associated to the account ID',
       async () => {
-        mockMethod.mockResolvedValue(Result.fail(new NotFoundError()))
+        repoMockMethod.mockResolvedValue(Result.fail(new NotFoundError()))
         const response = await request(server)
           .get(`${baseURL}?accountId=${accountId}`)
 
@@ -170,13 +190,14 @@ describe('GetActiveCartController', () => {
     describe('the found active carts IDs are different', () => {
       beforeEach(() => {
         const alternativeCart = Cart.create({
+          accountId: new UniqueEntityID(accountId),
           status: newCart.status,
           items: newCart.items
         }, new Identifier(123456)).getValue()
         
-        mockMethod
-          .mockResolvedValueOnce(Result.success([newCart]))
-          .mockResolvedValueOnce(Result.success([alternativeCart]))
+        useCaseMockMethod
+          .mockResolvedValueOnce(useCaseMockOkValue)
+          .mockResolvedValueOnce(Result.success(alternativeCart))
       })
       
       it('should return a status code 409', async () => {        
@@ -204,8 +225,14 @@ describe('GetActiveCartController', () => {
     })
 
     describe('the found active carts IDs are the same', () => {
+      const newAccCartProps = { ...newCartProps, accountId: new UniqueEntityID(accountId) }
+      const newCart = Cart.create(newAccCartProps, newCartId).getValue()
+      const successMockValue = Result.success(newCart)
+
       it('should use the provided account ID as the cart account ID', async () => {
-        mockMethod.mockResolvedValue(Result.success([newCart]))
+        useCaseMockMethod
+          .mockResolvedValueOnce(successMockValue)
+          .mockResolvedValueOnce(successMockValue)
         const response = await request(server)
           .get(`${baseURL}?accountId=${accountId}&guestId=${guestId}`)
         const result = response.body as SimpleCartResponseDTO
