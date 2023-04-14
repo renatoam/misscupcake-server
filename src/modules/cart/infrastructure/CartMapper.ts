@@ -8,6 +8,6 @@ export interface CartMapper extends Mapper<
   Cart
 > {
   toDomain(raw: CartPersistenceProps): Result<Cart, Error>
-  toDTO<Source, DTO>(source: Source, adapter: Adapter<Source, DTO>): Result<DTO | DTO[], Error>
+  toDTO<Source, DTO>(source: Source, adapter: Adapter<Source, DTO>): Result<DTO, Error>
   toPersistence(domain: Cart): Result<CartPersistenceProps, Error>
 }
