@@ -1,7 +1,8 @@
+import { UniqueEntityID } from "@base/UniqueEntityID"
 import { CartItem } from "./CartItemEntity"
 
 export interface CartProps {
-  accountId?: string
+  accountId: UniqueEntityID
   items?: CartItem[]
   messages?: CartMessage[]
   status: string

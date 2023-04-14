@@ -1,6 +1,7 @@
 import { Entity } from "@base/Entity";
 import { UniqueEntityID } from "@base/UniqueEntityID";
 import { Result } from "@shared/errors";
+import { CartItem } from "./CartItemEntity";
 import { CartProps } from "./CartProps";
 
 export class Cart extends Entity<CartProps> {
@@ -18,7 +19,7 @@ export class Cart extends Entity<CartProps> {
     return Result.success(newCart)
   }
 
-  public getSubtotalWithoutDiscount(): number {
+  private getSubtotal(): number {
     if (!this.props.items) return 0
 
     return this.props.items.reduce((acc, item) => {
@@ -27,20 +28,11 @@ export class Cart extends Entity<CartProps> {
     }, 0)
   }
 
-  public getTotalDiscountAmount(): number {
+  private getTotalDiscountAmount(): number {
     if (!this.props.items) return 0
 
     return this.props.items.reduce((acc, item) => {
       acc += item.discountAmount ? item.discountAmount * item.quantity : 0
-      return acc
-    }, 0)
-  }
-
-  public getTotal(): number {
-    if (!this.props.items) return 0
-
-    return this.props.items.reduce((acc, item) => {
-      acc += item.total * item.quantity
       return acc
     }, 0)
   }
@@ -54,14 +46,18 @@ export class Cart extends Entity<CartProps> {
   }
 
   public get subtotal(): number {
-    return this.getSubtotalWithoutDiscount()
+    return this.getSubtotal()
   }
 
   public get total(): number {
-    return this.getSubtotalWithoutDiscount() - this.getTotalDiscountAmount()
+    return this.getSubtotal() - this.getTotalDiscountAmount()
   }
   
-  public get items(): any {
-    return this.props.items
+  public get items(): CartItem[] {
+    return this.props.items || []
+  }
+
+  public get accountId(): UniqueEntityID {
+    return this.props.accountId
   }
 }
