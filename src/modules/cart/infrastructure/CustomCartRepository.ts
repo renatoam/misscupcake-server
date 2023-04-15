@@ -25,7 +25,7 @@ export class CustomCartRepository implements CartRepository {
         return Result.fail<QueryError>(queryError)
       }
 
-      if (!cart.length) {
+      if (!cart?.length) {
         return Result.fail(new NotFoundError(Error('No active cart was found.')))
       }
 

@@ -1,17 +1,16 @@
 import { Controller } from "@base/Controller";
-import { CartUseCase } from "@cart/application/CartUseCase";
-import { Cart } from "@cart/domain/CartEntity";
 import { HttpRequest, HttpResponse } from "@shared/types/httpTypes";
 import { AccountActiveCartStrategy } from "./AccountActiveCartStrategy";
 import { AccountGuestActiveCartStrategy } from "./AccountGuestActiveCartStrategy";
+import { ActiveCartContext, ActiveCartUseCase } from "./ActiveCartContext";
 import { GuestActiveCartStrategy } from "./GuestActiveCartStrategy";
 
 export type CustomerId = { accountId?: string, guestId?: string, use?: 'guest' | 'account' }
 
 export class GetActiveCartController implements Controller {
-  private getActiveCartUseCase: CartUseCase<string, Cart>
+  private getActiveCartUseCase: ActiveCartUseCase
   
-  constructor(getActiveCartUseCase: CartUseCase<string, Cart>) {
+  constructor(getActiveCartUseCase: ActiveCartUseCase) {
     this.getActiveCartUseCase = getActiveCartUseCase
   }
 
@@ -20,18 +19,19 @@ export class GetActiveCartController implements Controller {
     response: HttpResponse
   ): Promise<HttpResponse> {
     const { accountId, guestId } = request.query
-    const accountGuestActiveCartStrategy = new AccountGuestActiveCartStrategy(this.getActiveCartUseCase)
-    const guestActiveCartStrategy = new GuestActiveCartStrategy(this.getActiveCartUseCase)
-    const accountActiveCartStrategy = new AccountActiveCartStrategy(this.getActiveCartUseCase)
+    const activeCart = new ActiveCartContext(
+      AccountActiveCartStrategy,
+      this.getActiveCartUseCase
+    )
     
     if (accountId && guestId) {
-      return accountGuestActiveCartStrategy.getActiveCart(request, response)
+      activeCart.setStrategy(AccountGuestActiveCartStrategy)
     }
 
     if (!accountId && guestId) {
-      return guestActiveCartStrategy.getActiveCart(request, response)
+      activeCart.setStrategy(GuestActiveCartStrategy)
     }
-    
-    return accountActiveCartStrategy.getActiveCart(request, response)
+
+    return activeCart.execute(request, response)
   }
 }
