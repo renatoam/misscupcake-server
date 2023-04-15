@@ -1,13 +1,16 @@
 
-import { SimpleCartResponseDTO } from "@cart/domain/CartProps";
-import { Result } from "@shared/errors";
+import { CustomerId } from "@cart/features/getActiveCart/GetActiveCartController";
+import { HttpRequest, HttpResponse } from "@shared/types/httpTypes";
 
 export interface CustomerParams {
-  accountId: string
-  guestId: string
+  accountId?: string
+  guestId?: string
   use?: 'guest' | 'account'
 }
 
 export interface ActiveCartStrategy {
-  getActiveCart(customerParams: CustomerParams): Promise<Result<SimpleCartResponseDTO, Error>>
+  getActiveCart(
+    request: HttpRequest<unknown, CustomerId, unknown>,
+    response: HttpResponse
+  ): Promise<HttpResponse>
 }

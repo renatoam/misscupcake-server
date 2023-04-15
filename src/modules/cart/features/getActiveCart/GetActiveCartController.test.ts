@@ -4,7 +4,6 @@ import { CartUseCase } from "@cart/application/CartUseCase";
 import { Cart } from "@cart/domain/CartEntity";
 import { CartItem } from "@cart/domain/CartItemEntity";
 import { SimpleCartResponseDTO } from "@cart/domain/CartProps";
-import { CartRepository } from "@cart/infrastructure/CartRepository";
 import { validateCustomerId } from "@middlewares/cart/getActiveCartMiddleware";
 import { NotFoundError, Result } from "@shared/errors";
 import { Router } from "express";
@@ -16,23 +15,11 @@ import { GetActiveCartController } from "./GetActiveCartController";
 const router = Router()
 const mongoConnection = vitest.fn()
 
-const cartRepositoryMock: CartRepository = {
-  getCartsByCustomerId: vitest.fn(),
-  getAll: vitest.fn(),
-  getById: vitest.fn(),
-  save: vitest.fn(),
-  delete: vitest.fn(),
-  getActiveCart: vitest.fn()
-}
-
 const getActiveCartUseCaseMock: CartUseCase<string, Cart> = {
   run: vitest.fn()
 }
 
-const getActiveCartController = new GetActiveCartController(
-  cartRepositoryMock,
-  getActiveCartUseCaseMock
-)
+const getActiveCartController = new GetActiveCartController(getActiveCartUseCaseMock)
 
 router.get('/carts', validateCustomerId, (request, response) => getActiveCartController.handle(request, response))
 
@@ -56,18 +43,11 @@ describe('GetActiveCartController', () => {
   }
   const newCart = Cart.create(newCartProps, newCartId).getValue()
 
-  const repoMockOkValue = Result.success([newCart])
   const useCaseMockOkValue = Result.success(newCart)
   const useCaseMockFailValue = Result.fail(new NotFoundError())
-
-  const repoMockMethod = cartRepositoryMock.getCartsByCustomerId as Mock
   const useCaseMockMethod = getActiveCartUseCaseMock.run as Mock
 
   describe('account ID or guest ID are properly provided', () => {
-    beforeEach(() => {
-      repoMockMethod.mockReset()
-    })
-
     it('should return status code 200', async () => {
       useCaseMockMethod.mockResolvedValue(useCaseMockOkValue)
       const response = await request(server)
@@ -117,7 +97,7 @@ describe('GetActiveCartController', () => {
   describe('guest ID is provided but no account ID', () => {
     it('should return a cart in proper format if guest ID has an active cart associated',
       async () => {
-        repoMockMethod.mockResolvedValue(repoMockOkValue)
+        useCaseMockMethod.mockResolvedValue(useCaseMockOkValue)
         const response = await request(server)
           .get(`${baseURL}?guestId=${guestId}`)
         const result: SimpleCartResponseDTO = response.body
@@ -133,7 +113,7 @@ describe('GetActiveCartController', () => {
 
     it('should return a 404 status code if there is no active cart associated to the guest ID',
       async () => {
-        repoMockMethod.mockResolvedValue(Result.fail(new NotFoundError()))
+        useCaseMockMethod.mockResolvedValue(Result.fail(new NotFoundError()))
         const response = await request(server)
           .get(`${baseURL}?guestId=${guestId}`)
 
@@ -143,9 +123,13 @@ describe('GetActiveCartController', () => {
   })
   
   describe('account ID is provided but no guest ID', () => {
+    const newAccCartProps = { ...newCartProps, accountId: new UniqueEntityID(accountId) }
+    const newCart = Cart.create(newAccCartProps, newCartId).getValue()
+    const successMockValue = Result.success(newCart)
+
     it('should return a cart in proper format if account ID has an active cart associated',
       async () => {
-        repoMockMethod.mockResolvedValue(repoMockOkValue)
+        useCaseMockMethod.mockResolvedValue(successMockValue)
         const response = await request(server)
           .get(`${baseURL}?accountId=${accountId}`)
         const result: SimpleCartResponseDTO = response.body
@@ -161,7 +145,7 @@ describe('GetActiveCartController', () => {
 
     it('should return a 404 status code if there is no active cart associated to the account ID',
       async () => {
-        repoMockMethod.mockResolvedValue(Result.fail(new NotFoundError()))
+        useCaseMockMethod.mockResolvedValue(Result.fail(new NotFoundError()))
         const response = await request(server)
           .get(`${baseURL}?accountId=${accountId}`)
 
