@@ -22,11 +22,13 @@ interface LoadCartRequestDTO {
   cartId: string
 }
 
+// On updating, when updating product to 0, use delete product
 interface UpdateCartRequestDTO {
   cartId: string
   products: CartProductRequest[]  
 }
 
+// On deleting the last product, delete the cart as well
 interface DeleteProductRequestDTO {
   cartId: string
   productId: string

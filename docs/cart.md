@@ -12,6 +12,10 @@ Estando logado (account ID) ou não (guest ID) o cart é controlado via servidor
 	- Anônimo recebe um guest ID
 	- Guest ID é salvo em web storage
 
+- Client envia requisição para o servidor checar se já há algum carrinho para este guest ID
+  - Se houver, retorna os produtos
+  - Se não houver, nada muda (retorna 404, mas client trata como vazio ou nulo)
+
 - Anônimo adiciona produtos no carrinho via catálogo (Add to Cart)
   - Client envia account ID (como nulo) e guest ID para o servidor
   - Produtos são salvos via web storage (IndexedDB) para acesso offline (PWA)
