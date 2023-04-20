@@ -7,4 +7,5 @@ export interface CartPersistenceProps {
   account_id: string
   status: string
   messages: CartMessage[]
+  items?: any[]
 }

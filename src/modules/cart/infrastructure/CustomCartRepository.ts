@@ -13,23 +13,44 @@ export class CustomCartRepository implements CartRepository {
 
   async getActiveCart(customerId: string): Promise<Result<Cart, Error>> {
     try {
-      const { data: cart, error } = await supabase
+      const { data: cart, error: cartError } = await supabase
         .from('cart')
         .select('*')
         .eq('account_id', customerId)
         .eq('status', 'active')
         .maybeSingle()
 
-      if (error) {
-        const queryError = new QueryError(Error(error.message))
+      if (cartError) {
+        const queryError = new QueryError(Error(cartError.message))
         return Result.fail<QueryError>(queryError)
       }
 
-      if (!cart?.length) {
+      if (!cart) {
         return Result.fail(new NotFoundError(Error('No active cart was found.')))
       }
 
-      const adapteeCart = this.mapper.toDomain(cart).getValue()
+      const { data: cartItems, error: cartItemsError } = await supabase
+        .from('cart_item')
+        .select('*')
+        .eq('cart_id', cart.id)
+
+      if (cartItemsError) {
+        const queryError = new QueryError(Error(cartItemsError.message))
+        return Result.fail<QueryError>(queryError)
+      }
+
+      const incomingCart = {
+        ...cart,
+        items: cartItems
+      }
+      const adapteeCartOrError = this.mapper.toDomain(incomingCart)
+
+      if (adapteeCartOrError.isError()) {
+        return Result.fail(adapteeCartOrError.getError())
+      }
+
+      const adapteeCart = adapteeCartOrError.getValue()
+      
       return Result.success(adapteeCart)
     } catch (error) {
       const databaseError = new DatabaseError(Error())

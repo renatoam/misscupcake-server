@@ -1,4 +1,5 @@
 import { Adapter } from "@base/Mapper";
+import { UniqueEntityID } from "@base/UniqueEntityID";
 import { persistenceToDomainCartAdapter } from "@cart/adapters/CartToDomainAdapter";
 import { Cart } from "@cart/domain/CartEntity";
 import { CartPersistenceProps } from "@cart/domain/CartPersistenceProps";
@@ -13,10 +14,22 @@ export class CustomCartMapper implements CartMapper {
   }
 
   toDomain(raw: CartPersistenceProps): Result<Cart, Error> {
-    const adapteeCart = persistenceToDomainCartAdapter(raw)
-    const newProduct = Cart.create(adapteeCart)
+    const adapteeCartOrError = persistenceToDomainCartAdapter(raw)
 
-    return Result.success(newProduct.getValue())
+    if (adapteeCartOrError.isError()) {
+      return Result.fail(adapteeCartOrError.getError())
+    }
+
+    const { id, ...props } = adapteeCartOrError.getValue()
+    const newCartOrError = Cart.create(props, new UniqueEntityID(id))
+
+    if (newCartOrError.isError()) {
+      return Result.fail(newCartOrError.getError())
+    }
+
+    const newCart = newCartOrError.getValue()
+
+    return Result.success(newCart)
   }
   
   toPersistence(_domain: Cart): Result<CartPersistenceProps, Error> {
