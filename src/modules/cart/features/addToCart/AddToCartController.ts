@@ -2,7 +2,7 @@ import { Controller } from "@base/Controller";
 import { SimpleCartResponseDTO } from "@cart/domain/CartProps";
 import { supabase } from "@database";
 import { HttpRequest, HttpResponse } from "@shared/types/httpTypes";
-import { v4 as uuid } from "uuid";
+import { validate as isUuid, v4 as uuid } from "uuid";
 import { AddToCartRequestDTO } from "./AddToCartProps";
 
 export class AddToCartController implements Controller {  
@@ -11,6 +11,17 @@ export class AddToCartController implements Controller {
     response: HttpResponse<SimpleCartResponseDTO>
   ): Promise<HttpResponse<SimpleCartResponseDTO>> {
     const { accountId, products } = request.body as AddToCartRequestDTO
+    const invalidAccount = !accountId || !isUuid(accountId)
+    const invalidProducts = !products || !products?.length
+    const invalidFormat = !products?.every(product => {
+      return Object.hasOwn(product, 'id') && Object.hasOwn(product, 'quantity')
+    })
+    const invalidProductId = !products?.every(product => isUuid(product.id))
+
+    if (invalidAccount || invalidProducts || invalidFormat || invalidProductId) {
+      return response.status(400).json()
+    }
+
     const { data: cart, error } = await supabase
       .from('cart')
       .insert({
