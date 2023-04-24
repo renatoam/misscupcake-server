@@ -23,14 +23,24 @@ describe('AddToCartController', () => {
 
   beforeEach(async () => {
     request = supertest(server).post('/api/v1/carts/create')
+    
     await supabase
       .from('cart')
       .delete()
       .eq('id', cartId)
+    
+    await supabase
+      .from('account')
+      .insert({ id: validAccount })
   })
-
-  afterEach(() => {
+    
+  afterEach(async () => {
     request = null
+
+    await supabase
+      .from('account')
+      .delete()
+      .eq('id', validAccount)
   })
 
   describe('given a valid account ID and valid products', () => {
@@ -55,7 +65,8 @@ describe('AddToCartController', () => {
       it('should create a new cart for the account', async () => {
         const response = await request.send({ accountId: validAccount, products: [validProduct] })
         
-        expect(response.body.cartId).toBe(cartId)
+        expect(response.body).toHaveProperty('cartId')
+        expect(response.status).toBe(200)
       })
 
       it('should create a new cart with the proper format', async () => {
@@ -70,11 +81,109 @@ describe('AddToCartController', () => {
       })
     })
 
-    describe.todo('account ID already has a valid Cart associated')
+    describe('when account ID already has a valid Cart associated', () => {
+      const mockAccountID = '927f4975-d65b-42da-a70e-2921eb2a026f'
+      const mockCartID = '7373e4ce-007e-4606-9a13-a282a3285eeb'
+      let cart: any = null
 
-    describe.todo('cart item does not exist yet')
+      beforeEach(async () => {
+        const { error: accountError } = await supabase
+          .from('account')
+          .insert({ id: mockAccountID })
 
-    describe.todo('cart item already exists')
+        if (accountError) {
+          console.error(accountError)
+          throw Error('Error on creating account')
+        }
+        
+        const { data, error } = await supabase
+          .from('cart')
+          .insert({
+            status: 'active',
+            account_id: mockAccountID,
+            id: mockCartID
+          })
+          .select()
+          .maybeSingle()
+        
+        if (error) {
+          console.error(error)
+          throw Error('Error on creating cart')
+        }
+
+        cart = data
+      })
+      
+      afterEach(async () => {
+        cart = null
+
+        const { error: cartError } = await supabase
+          .from('cart')
+          .delete()
+          .eq('id', mockCartID)
+
+        if (cartError) {
+          console.error(cartError)
+          throw Error('Error on deleting cart')
+        }
+
+        const { error: accountError } = await supabase
+          .from('account')
+          .delete()
+          .eq('id', mockAccountID)
+  
+        if (accountError) {
+          console.error(accountError)
+          throw Error('Error on deleting account')
+        }
+      })
+
+      it('should return the existent cart and status code 200', async () => {
+        const response = await request.send({ accountId: mockAccountID, products: [validProduct] })
+        
+        expect(response.body.cartId).toBe(cart?.id)
+        expect(response.status).toBe(200)
+      })
+
+      describe('cart item does not exist yet', () => {
+        it('should create a new cart item with the given data', async () => {
+          const response = await request.send({ accountId: mockAccountID, products: [validProduct] })
+        
+          expect(response.body.items.length).toBe(1)
+          expect(response.body.items[0].product_id).toBe(validProduct.id)
+        })
+      })
+  
+      describe('cart item already exists', () => {
+        beforeEach(async () => {
+          const newCartitems = [validProduct].map(item => ({
+            product_id: item.id,
+            quantity: item.quantity,
+            cart_id: mockCartID,
+            id: '5aadfae6-236d-44c2-a428-176c7749bc01'
+          }))
+          
+          const { error: cartItemsError } = await supabase
+            .from('cart_item')
+            .insert(newCartitems)
+            .select()
+
+          if (cartItemsError) {
+            throw Error('Error on creating cart item')
+          }
+        })
+
+        it('should update the existent cart item and do not create another one',async () => {
+          const updatedProduct = { ...validProduct, quantity: 20 }
+          const response = await request.send({ accountId: mockAccountID, products: [updatedProduct] })
+        
+          expect(response.body.items?.length).toBe(1)
+          expect(response.body.items?.[0].product_id).toBe(validProduct.id)
+          expect(response.body.items?.[0].quantity).toBe(updatedProduct.quantity)
+        })
+      })
+    })
+
   })
 
   describe('given an invalid account ID or products format', () => {

@@ -34,8 +34,8 @@ describe('GetActiveCartController', () => {
   const accountId = '550e8400-e29b-41d4-a716-446655440001'
   const guestId = '550e8400-e29b-41d4-a716-446655440002'
 
-  const newCartId = new UniqueEntityID(123)
-  const newCartItem = CartItem.create({ name: 'mockItem' } as any, new UniqueEntityID(987))
+  const newCartId = new UniqueEntityID('2ac5bbc2-6757-4176-ad0a-8817048c36a7')
+  const newCartItem = CartItem.create({ name: 'mockItem' } as any, new UniqueEntityID('40b1e47c-f918-4407-9bca-d458647def10'))
   const newCartProps = {
     accountId: new UniqueEntityID(guestId),
     status: 'active',
