@@ -1,5 +1,5 @@
-import { CustomCartMapper } from "@cart/infrastructure/CustomCartMapper";
-import { CustomCartRepository } from "@cart/infrastructure/CustomCartRepository";
+import { CustomCartMapper } from "@cart/infrastructure/cart/CustomCartMapper";
+import { CustomCartRepository } from "@cart/infrastructure/cart/CustomCartRepository";
 import { HttpRequest, HttpResponse } from "@shared/types/httpTypes";
 import { CustomerId, GetActiveCartController } from "./GetActiveCartController";
 import { GetActiveCartUseCase } from "./GetActiveCartUseCase";

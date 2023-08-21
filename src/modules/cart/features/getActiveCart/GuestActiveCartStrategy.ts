@@ -22,7 +22,7 @@ export class GuestActiveCartStrategy implements ActiveCartStrategy {
     const errorHandler = errorResponseHandler(response)
     const { guestId } = request.query as Required<CustomerParams>
     
-    const guestCartsOrError = await this.getActiveCartUseCase.run(guestId)
+    const guestCartsOrError = await this.getActiveCartUseCase.execute(guestId)
 
     if (guestCartsOrError.isError()) {
       return errorHandler(guestCartsOrError.getError())

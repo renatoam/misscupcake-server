@@ -16,7 +16,7 @@ const router = Router()
 const mongoConnection = vitest.fn()
 
 const getActiveCartUseCaseMock: CartUseCase<string, Cart> = {
-  run: vitest.fn()
+  execute: vitest.fn()
 }
 
 const getActiveCartController = new GetActiveCartController(getActiveCartUseCaseMock)
@@ -45,7 +45,7 @@ describe('GetActiveCartController', () => {
 
   const useCaseMockOkValue = Result.success(newCart)
   const useCaseMockFailValue = Result.fail(new NotFoundError())
-  const useCaseMockMethod = getActiveCartUseCaseMock.run as Mock
+  const useCaseMockMethod = getActiveCartUseCaseMock.execute as Mock
 
   describe('account ID or guest ID are properly provided', () => {
     it('should return status code 200', async () => {

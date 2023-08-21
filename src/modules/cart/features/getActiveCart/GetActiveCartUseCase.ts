@@ -1,6 +1,6 @@
 import { CartUseCase } from "@cart/application/CartUseCase";
 import { Cart } from "@cart/domain/CartEntity";
-import { CartRepository } from "@cart/infrastructure/CartRepository";
+import { CartRepository } from "@cart/infrastructure/cart/CartRepository";
 import { NotFoundError, Result } from "@shared/errors";
 
 export class GetActiveCartUseCase implements CartUseCase<string, Cart> {
@@ -10,7 +10,7 @@ export class GetActiveCartUseCase implements CartUseCase<string, Cart> {
     this.repository = repository
   }
 
-  async run(customerId: string): Promise<Result<Cart, Error>> {
+  async execute(customerId: string): Promise<Result<Cart, Error>> {
     const activeCartOrError = await this.repository.getActiveCart(customerId)
 
     if (activeCartOrError.isError()) {

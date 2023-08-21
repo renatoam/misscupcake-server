@@ -22,7 +22,7 @@ export class AccountActiveCartStrategy implements ActiveCartStrategy {
     const errorHandler = errorResponseHandler(response)
     const { accountId } = request.query as Required<CustomerParams>
 
-    const accountCartsOrError = await this.getActiveCartUseCase.run(accountId)
+    const accountCartsOrError = await this.getActiveCartUseCase.execute(accountId)
 
     if (accountCartsOrError.isError()) {
       return errorHandler(accountCartsOrError.getError())
