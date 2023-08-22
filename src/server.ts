@@ -32,7 +32,7 @@ function app({ connections, router }: AppProps) {
     origin: corsOrigin
   }))
 
-  server.use('/api/v1', router)
+  server.use('/missapi/v1', router)
 
   server.use((_, response: Response) => {
     return response.status(404).send('There is nothing here. Try "/products"')
