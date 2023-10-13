@@ -1,0 +1,75 @@
+import { Entity } from "@shared/domain/ports/Entity";
+import { UniqueEntityID } from "@shared/domain/UniqueEntityID";
+import { Result } from "@shared/errors";
+import { CartItemProps } from "./CartItemProps";
+
+export class CartItem extends Entity<CartItemProps> {
+  private constructor(props: CartItemProps, id?: UniqueEntityID) {
+    super(props, id)
+  }
+
+  public static create(props: CartItemProps, id?: UniqueEntityID): Result<CartItem, Error> {
+    const newCartItem = new CartItem(props, id)
+    return Result.success(newCartItem)
+  }
+
+  public subtotal(): number {
+    return this.unitPrice * this.quantity
+  }
+
+  public totalDiscount(): number {
+    return (this.unitPrice - this.discountAmount) * this.quantity
+  }
+  
+  public total(): number {
+    return this.subtotal() - this.totalDiscount()
+  }
+
+  public get id(): UniqueEntityID {
+    return this._id
+  }
+  
+  public get productId(): string {
+    return this.props.productId
+  }
+  
+  public get cartId(): string | undefined {
+    return this.props.cartId
+  }
+
+  public setCartId(id: UniqueEntityID): void {
+    this.props.cartId = id.toString()
+  }
+
+  public get name(): string {
+    return this.props.name
+  }
+
+  public get image(): string {
+    return this.props.image
+  }
+  
+  public get message(): string | undefined {
+    return this.props.message
+  }
+  
+  public get quantity(): number {
+    return this.props.quantity
+  }
+  
+  public setQuantity(newQuantity: number): void {
+    this.props.quantity = newQuantity
+  }
+  
+  public get unitPrice(): number {
+    return this.props.unitPrice
+  }
+
+  public get discountAmount(): number {
+    return this.props.discountAmount ?? 0
+  }
+
+  public get removed(): boolean {
+    return !!this.props.removed
+  }
+}

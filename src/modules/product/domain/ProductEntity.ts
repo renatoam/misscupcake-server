@@ -13,12 +13,20 @@ export class Product {
 
     return Result.success<Product>(new Product(props))
   }
+  
+  public get unitPrice(): number {
+    return this.props.price.current
+  }
+  
+  private get discountPercent(): number {
+    return this.props.price.discount
+  }
 
   public get discountAmount(): number {
     return (this.unitPrice * this.discountPercent) / 100
   }
 
-  public get price(): number {
+  public get calculatedPrice(): number {
     return this.unitPrice - this.discountAmount
   }
   
@@ -32,14 +40,6 @@ export class Product {
 
   public get description(): string {
     return this.props.description
-  }
-
-  public get unitPrice(): number {
-    return this.props.price.current
-  }
-
-  public get discountPercent(): number {
-    return this.props.price.discount
   }
 
   public get availability(): Availability {

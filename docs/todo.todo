@@ -1,0 +1,44 @@
+Por que colocar as ports (interfaces base) na camada de domínio?
+Porque elas serão acessadas (mencionadas), pelas camadas de domínio e aplicação, que não podem mencionar camadas externas, então faz sentido colocá-las ali. Além de não terem detalhes de implementação, podem ser acessadas sem nenhuma violação pelas camadas de fora (dependency rule).
+
+Models, controllers e views/presenters vão na camada de interface adapters. Bob diz:
+  _"It is this layer, for example, that will wholly contain the MVC architecture of a GUI. The Presenters, Views, and Controllers all belong in here."_
+
+É pelo mesmo motivo que eu devo/posso colocar os DTOs* aqui também: _"The models are likely just data structures that are passed from the controllers to the use cases, and then back from the use cases to the presenters and views."_
+*: Porque entendo que se models são só estrutura de dados pra comunicação entre controllers, use cases, etc., quem utilizamos pra isso é justamente os DTOs. 
+
+http://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html
+
+Cenário 1:
+
+Usuário anônimo navega pelo site:
+  ☐ Anônimo recebe um guest ID
+	☐ Guest ID é salvo em web storage
+
+- Client envia requisição para o servidor checar se já há algum carrinho para este guest ID
+  - Se houver, retorna os produtos
+  - Se não houver, nada muda (retorna 404, mas client trata como vazio ou nulo)
+
+- Anônimo adiciona produtos no carrinho via catálogo (Add to Cart)
+  - Client envia account ID (como nulo) e guest ID para o servidor
+  - Produtos são salvos via web storage (IndexedDB) para acesso offline (PWA)
+    - Também podemos cachear as respostas das requests de catálogo para permitir requests offline
+
+- Servidor cria um novo carrinho usando o guest ID enviado
+  - O guest ID é validado antes e, sendo inválido, servidor retorna um erro
+
+- Servidor retorna dados básicos do carrinho (suficiente pra exibir Mini Cart)
+
+- Anônimo fecha o browser
+	- IndexedDB mantém guest ID e carrinho salvos no Client
+    - IndexedDB também permite criar collections, como com NoSQL, então podemos criar collections para wishlist e "save for later"
+
+- Anônimo abre novamente o browser
+	- Guest ID e carrinho são recuperados do IndexedDB
+    - Servidor verifica que carrinho está ativo
+    - Neste caso (verificar se carrinho está ativo), estamos considerando a possibilidade do usuário poder fechar uma compra sem se logar, porque aí teríamos mais status para o carrinho além de "ativo"
+  - Carrinho é reidratado com os dados atualizados do servidor (Get Cart?*)
+
+> *: se o usuário nunca chegou na tela de carrinho, não vai ter usado o Load Cart. Nesse caso, usamos o Add to Cart, que no caso de já haver um carrinho criado, apenas o atualiza.
+> 
+> Mas seria interessante ter um recurso específico para checar se o usuário já possui um carrinho salvo, talvez seja melhor do que usar o Add to Cart fora do escopo dele.

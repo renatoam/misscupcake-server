@@ -1,5 +1,5 @@
-import { mongoConnection } from "./database";
-import router from "./routes";
+import { mongoConnection } from "./modules/shared/frameworksDrivers/mongo";
+import router from "./modules/shared/main/routes";
 import createServer from "./server";
 
 const server = createServer({

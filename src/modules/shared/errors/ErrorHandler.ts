@@ -1,4 +1,4 @@
-import { badRequest, conflict, notFound, serverError, serviceUnavailable } from "@shared/helpers/http";
+import { badRequest, conflict, notFound, serverError, serviceUnavailable } from "@shared/interfaceAdapters/httpResponseHandlers";
 import { ErrorBody } from "@shared/types/errorTypes";
 import { HttpResponse } from "@shared/types/httpTypes";
 

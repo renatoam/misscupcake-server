@@ -1,5 +1,32 @@
 # Regras de Negócio | Cart
 
+- REVISAR: mudei add to cart pra não ser upsert, somente add
+
+
+    /**
+     * Revisar
+     * 
+     * Quando não houver carrinho ativo, eu devo chamar o AddToCartUseCase
+     * Quando houver, eu devo chamar o UpdateCartUseCase
+     * 
+     * Isso, porque quando eu não tenho um carrinho, eu não tenho cart item ID
+     * E quando eu estou atualizando o carrinho, eu já tenho os cart item ID
+     * 
+     * RESUMINDO
+     * 
+     * Melhor eu separar as responsabilidades:
+     * 
+     * No client, eu verifico se o customer já tem um carrinho criado,
+     * se sim, ele precisa consumir o serviço de UPDATE
+     * se não, ele consome o serviço de CREATE
+     * 
+     * Caso ele use o CREATE já possuindo um carrinho, eu retorno uma mensagem de erro
+     * Dessa forma fica mais fácil de entender, gerenciar e eu não preciso passar os
+     * cart item ids no AddToCartRequestDTO, deixo somente products IDs
+     * 
+     * Mas tenho que desfazer as alterações que fiz ou duplicar os bareitem/simplecartitem
+     */
+
 Depois de muita pesquisa, pra saber como geralmente é feito em grandes e-commerces*, a jornada relacionada ao Cart será como descrito abaixo.
 
 > *: embora esta aplicação seja pequena, a ideia é que seja uma POC com recursos usados em grandes apps.

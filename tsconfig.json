@@ -17,7 +17,7 @@
       "@content/*": ["src/modules/content/*"],
       "@product/*": ["src/modules/product/*"],
       "@shared/*": ["src/modules/shared/*"],
-      "@middlewares/*": ["src/middlewares/*"],
+      "@middlewares/*": ["src/modules/cart/frameworksDrivers/middlewares/*"],
       "@database": ["src/database"]
     }
   },
