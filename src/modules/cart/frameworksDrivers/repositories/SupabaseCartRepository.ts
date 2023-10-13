@@ -12,24 +12,26 @@ export class SupabaseCartRepository implements CartRepository {
     this.mapper = mapper
   }
 
+  // Why do I'm not using `maybeSingle()`? Because it returns an error when there is no cart,
+  // instead of the empty (that I expected/prefer)
   async getActiveCart(customerId: string): Promise<Result<Cart, Error>> {
     try {
-      const { data: cart, error: cartError } = await supabase
+      const { data: result, error: cartError } = await supabase
         .from('cart')
         .select('*')
         .eq('account_id', customerId)
         .eq('status', 'active')
-        .maybeSingle()
 
       if (cartError) {
         const queryError = new QueryError(Error(cartError.message))
         return Result.fail<QueryError>(queryError)
       }
 
-      if (!cart) {
+      if (!result?.length) {
         return Result.fail(new NotFoundError(Error('No active cart was found.')))
       }
 
+      const cart = result[0]
       const { data: cartItems, error: cartItemsError } = await supabase
         .from('cart_item')
         .select('*')
@@ -44,15 +46,15 @@ export class SupabaseCartRepository implements CartRepository {
         ...cart,
         items: cartItems
       }
-      const adapteeCartOrError = this.mapper.toDomain(incomingCart)
+      const adaptedCartOrError = this.mapper.toDomain(incomingCart)
 
-      if (adapteeCartOrError.isError()) {
-        return Result.fail(adapteeCartOrError.getError())
+      if (adaptedCartOrError.isError()) {
+        return Result.fail(adaptedCartOrError.getError())
       }
 
-      const adapteeCart = adapteeCartOrError.getValue()
+      const adaptedCart = adaptedCartOrError.getValue()
       
-      return Result.success(adapteeCart)
+      return Result.success(adaptedCart)
     } catch (error) {
       const databaseError = new DatabaseError(Error())
       return Result.fail<DatabaseError>(databaseError)
@@ -75,8 +77,8 @@ export class SupabaseCartRepository implements CartRepository {
         return Result.fail(new NotFoundError(Error('No cart was found.')))
       }
 
-      const adapteeCart = carts.map(cart => this.mapper.toDomain(cart).getValue())
-      return Result.success(adapteeCart)
+      const adaptedCart = carts.map(cart => this.mapper.toDomain(cart).getValue())
+      return Result.success(adaptedCart)
     } catch (error) {
       const databaseError = new DatabaseError(Error())
       return Result.fail<DatabaseError>(databaseError)
@@ -100,8 +102,8 @@ export class SupabaseCartRepository implements CartRepository {
         return Result.fail<QueryError>(queryError)
       }
 
-      const adapteeCart = this.mapper.toDomain(newCart).getValue()
-      return Result.success(adapteeCart)
+      const adaptedCart = this.mapper.toDomain(newCart).getValue()
+      return Result.success(adaptedCart)
     } catch (error) {
       const databaseError = new DatabaseError(Error('', { cause: 'Save Cart' }))
       return Result.fail<DatabaseError>(databaseError)

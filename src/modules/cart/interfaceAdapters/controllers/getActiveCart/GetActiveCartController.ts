@@ -1,16 +1,17 @@
+import { simpleCartDTOAdapter } from "@cart/interfaceAdapters/adapters/SimpleCartDTOAdapter";
+import { SimpleCartResponseDTO } from "@cart/interfaceAdapters/dtos/SimpleCartDTO";
+import { GetActiveCartUseCase } from "@cart/useCases/GetActiveCartUseCase";
 import { Controller } from "@shared/domain/ports/Controller";
+import { errorResponseHandler } from "@shared/errors/ErrorHandler";
+import { ok } from "@shared/interfaceAdapters/httpResponseHandlers";
 import { HttpRequest, HttpResponse } from "@shared/types/httpTypes";
-import { AccountActiveCartStrategy } from "../../strategies/activeCart/AccountActiveCartStrategy";
-import { AccountGuestActiveCartStrategy } from "../../strategies/activeCart/AccountGuestActiveCartStrategy";
-import { ActiveCartContext, ActiveCartUseCase } from "../../strategies/activeCart/ActiveCartContext";
-import { GuestActiveCartStrategy } from "../../strategies/activeCart/GuestActiveCartStrategy";
 
-export type CustomerId = { accountId?: string, guestId?: string, use?: 'guest' | 'account' }
+export type CustomerId = { customerId: string }
 
 export class GetActiveCartController implements Controller {
-  private getActiveCartUseCase: ActiveCartUseCase
+  private getActiveCartUseCase: GetActiveCartUseCase
   
-  constructor(getActiveCartUseCase: ActiveCartUseCase) {
+  constructor(getActiveCartUseCase: GetActiveCartUseCase) {
     this.getActiveCartUseCase = getActiveCartUseCase
   }
 
@@ -18,20 +19,19 @@ export class GetActiveCartController implements Controller {
     request: HttpRequest<unknown, CustomerId, unknown>,
     response: HttpResponse
   ): Promise<HttpResponse> {
-    const { accountId, guestId } = request.query
-    const activeCart = new ActiveCartContext(
-      AccountActiveCartStrategy,
-      this.getActiveCartUseCase
-    )
+    const errorHandler = errorResponseHandler(response)
+    const { customerId } = request.query
     
-    if (accountId && guestId) {
-      activeCart.setStrategy(AccountGuestActiveCartStrategy)
+    const customerCartOrError = await this.getActiveCartUseCase.execute(customerId)
+
+    if (customerCartOrError.isError()) {
+      const error = customerCartOrError.getError()
+      return errorHandler(error)
     }
 
-    if (!accountId && guestId) {
-      activeCart.setStrategy(GuestActiveCartStrategy)
-    }
-
-    return activeCart.execute(request, response)
+    const customerActiveCart = customerCartOrError.getValue()
+    const activeCart = simpleCartDTOAdapter(customerActiveCart)
+    const successResponse = ok<SimpleCartResponseDTO>(activeCart)
+    return response.status(successResponse.statusCode).json(successResponse.body)
   }
 }

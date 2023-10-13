@@ -10,19 +10,19 @@ export function validateCustomerId(
   response: HttpResponse,
   next: NextFunction
 ) {
-  const { accountId, guestId } = request.query
+  const { customerId } = request.query
   const errorHandler = errorResponseHandler(response)
 
-  if (!accountId && !guestId) {
+  if (!customerId) {
     const badRequestError = new ClientError(
-      Error('At least one account ID is required (guest or account).')
+      Error('Customer ID is required.')
     )
     return errorHandler(badRequestError)
   }
 
-  if (!accountId && !isUuid(guestId?.toString() ?? '')) {
+  if (!isUuid(customerId?.toString() ?? '')) {
     const badRequestError = new ClientError(
-      Error('The provided guest ID is invalid.')
+      Error('The provided customer ID has invalid format.')
     )
     return errorHandler(badRequestError)
   }

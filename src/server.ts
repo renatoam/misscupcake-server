@@ -1,6 +1,6 @@
 import cors from "cors";
 import dotenv from "dotenv";
-import Express, { Response, Router } from "express";
+import Express, { Router } from "express";
 
 interface AppProps {
   connections: Function[]
@@ -34,9 +34,7 @@ function app({ connections, router }: AppProps) {
 
   server.use('/missapi/v1', router)
 
-  server.use((_, response: Response) => {
-    return response.status(404).send('There is nothing here. Try "/products"')
-  })
+  server.use(Express.static('public'))
   
   return server
 }
