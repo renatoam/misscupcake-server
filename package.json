@@ -1,7 +1,7 @@
 {
   "name": "backend",
   "version": "1.0.0",
-  "description": "",
+  "description": "Back-End for the Miss Cupcake app.",
   "scripts": {
     "dev": "tsx src/index.ts",
     "dev:watch": "tsx watch src/index.ts",
@@ -9,8 +9,19 @@
     "start": "NODE_ENV=production node dist/index.js",
     "test": "vitest"
   },
-  "keywords": [],
-  "author": "",
+  "keywords": [
+    "typescript",
+    "javascript",
+    "node",
+    "express",
+    "clean architecture",
+    "layers",
+    "vitest",
+    "docker",
+    "supabase",
+    "mongodb"
+  ],
+  "author": "Renato Alves de Melo",
   "license": "ISC",
   "devDependencies": {
     "@types/cookie-parser": "^1.4.3",
