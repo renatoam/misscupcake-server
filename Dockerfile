@@ -8,6 +8,8 @@ RUN mkdir app
 
 WORKDIR /app
 
+COPY package*.json /app/
+
 RUN npm install
 
 # Good practice: put copy files after install to leverage layer cache when changing app later
