@@ -1,4 +1,4 @@
-import { BareItemDTO } from "@cart/domain/entities/CartProps"
+import { BareItemDTO } from "./SimpleItemsDTO"
 
 export interface AddToCartRequestDTO {
   accountId: string
