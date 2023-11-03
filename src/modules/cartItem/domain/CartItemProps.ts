@@ -5,11 +5,9 @@ export interface CartItemProps {
   name: string
   image: string
   message?: string
-  unitPrice: number
-  finalPrice?: number
+  unitPrice: number // base price
+  finalPrice?: number // price applying discounts that are direct on the product
   quantity: number
-  subtotal?: number
-  total?: number
   discountAmount?: number
   removed?: boolean
 }

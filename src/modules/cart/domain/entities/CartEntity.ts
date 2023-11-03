@@ -33,6 +33,10 @@ export class Cart extends Entity<CartProps> {
     }, 0)
   }
 
+  public setItems(items: CartItem[]) {
+    this.props.items = items
+  }
+
   public get id(): UniqueEntityID {
     return this._id
   }

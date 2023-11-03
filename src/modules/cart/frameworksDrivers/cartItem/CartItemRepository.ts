@@ -6,5 +6,5 @@ import { Result } from "@shared/errors";
 
 export interface CartItemRepository extends Repository {
   getItemsByCartId(cartId: UniqueEntityID): Promise<Result<CartItemByProduct[], Error>>
-  saveMany(cartItems: CartItem[]): Promise<Result<void, Error>>
+  saveMany(cartItems: CartItem[]): Promise<Result<any, Error>>
 }

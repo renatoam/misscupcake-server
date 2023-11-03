@@ -2,7 +2,6 @@ import { UniqueEntityID } from "@shared/domain/UniqueEntityID";
 import { CartUseCase } from "@cart/domain/ports/CartUseCase";
 import { Cart } from "@cart/domain/entities/CartEntity";
 import { CartItem } from "src/modules/cartItem/domain/CartItemEntity";
-import { BareItemDTO } from "@cart/domain/entities/CartProps";
 import IncomingID from "@shared/domain/IncomingID";
 import { SimpleProduct } from "@cart/domain/entities/SimpleProduct";
 import { CartRepository } from "@cart/domain/ports/CartRepository";
@@ -10,6 +9,7 @@ import { CartItemRepository } from "@cart/frameworksDrivers/cartItem/CartItemRep
 import { ProductRepository } from "@product/domain/ports/ProductRepository";
 import { Result } from "@shared/errors";
 import { AddToCartRequestDTO } from "../../interfaceAdapters/dtos/AddToCartDTO";
+import { BareItemDTO } from "@cart/interfaceAdapters/dtos/SimpleItemsDTO";
 
 // TODO: encapsular os grupos de lógica em Domain/Application Services
 export class AddToCartUseCase implements CartUseCase<AddToCartRequestDTO> {
@@ -44,6 +44,7 @@ export class AddToCartUseCase implements CartUseCase<AddToCartRequestDTO> {
       return Result.fail(productsOrError.getError())
     }
 
+    // I create a hash table of products to avoid creating another loop inside the map below
     const hashIncomingProducts = products
       .reduce((acc, product) => ({
         ...acc, [product.id]: product
@@ -89,7 +90,11 @@ export class AddToCartUseCase implements CartUseCase<AddToCartRequestDTO> {
     if (cartItemsOrError.isError()) {
       return Result.fail(cartItemsOrError.getError())
     }
-    
-    return Result.success(cartOrError.getValue())
+
+    const cartItems = newCartItemsOrError.map(item => item.getValue())
+    const cart = cartOrError.getValue()
+    cart.setItems(cartItems)
+
+    return Result.success(cart)
   }
 }

@@ -1,6 +1,7 @@
 import { Cart } from "@cart/domain/entities/CartEntity";
 import { CartItem } from "src/modules/cartItem/domain/CartItemEntity";
-import { SimpleCartItemResponseDTO, SimpleCartResponseDTO } from "@cart/domain/entities/CartProps";
+import { SimpleCartResponseDTO } from "../dtos/SimpleCartDTO";
+import { SimpleCartItemResponseDTO } from "../dtos/SimpleItemsDTO";
 
 export function simpleCartDTOAdapter(cart: Cart): SimpleCartResponseDTO {
   return {
@@ -18,7 +19,6 @@ export function simpleCartItemDTOAdapter(cartItem: CartItem): SimpleCartItemResp
     name: cartItem.name,
     image: cartItem.image,
     quantity: cartItem.quantity,
-    subtotal: cartItem.subtotal(),
     total: cartItem.total()
   }
 }

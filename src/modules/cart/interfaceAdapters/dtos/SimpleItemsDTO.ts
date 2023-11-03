@@ -9,6 +9,6 @@ export type SimpleCartItemResponseDTO = {
   name: string
   image: string
   quantity: number
-  subtotal: number
   total: number
+  unitPrice?: number
 }

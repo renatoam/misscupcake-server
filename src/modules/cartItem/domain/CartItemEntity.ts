@@ -12,17 +12,9 @@ export class CartItem extends Entity<CartItemProps> {
     const newCartItem = new CartItem(props, id)
     return Result.success(newCartItem)
   }
-
-  public subtotal(): number {
-    return this.unitPrice * this.quantity
-  }
-
-  public totalDiscount(): number {
-    return (this.unitPrice - this.discountAmount) * this.quantity
-  }
   
   public total(): number {
-    return this.subtotal() - this.totalDiscount()
+    return this.finalPrice * this.quantity
   }
 
   public get id(): UniqueEntityID {
@@ -63,6 +55,10 @@ export class CartItem extends Entity<CartItemProps> {
   
   public get unitPrice(): number {
     return this.props.unitPrice
+  }
+  
+  public get finalPrice(): number {
+    return this.props.finalPrice ?? 0
   }
 
   public get discountAmount(): number {

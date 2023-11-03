@@ -35,7 +35,7 @@ export class CustomCartItemRepository implements CartItemRepository {
     return Result.success(cartItem)
   }
 
-  async saveMany(cartItems: CartItem[]): Promise<Result<void, Error>> {
+  async saveMany(cartItems: CartItem[]): Promise<Result<any, Error>> {
     const cartItemsResult =
       cartItems.map(cartItem => this.cartItemMapper.toPersistence(cartItem))
     const invalidCartItem = cartItemsResult.find(item => item.isError())
@@ -45,16 +45,17 @@ export class CustomCartItemRepository implements CartItemRepository {
     }
 
     const cartItemsPersistence = cartItemsResult.map(item => item.getValue())
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('cart_item')
       .upsert(cartItemsPersistence)
+      .select()
 
     if (error) {
       const queryError = new QueryError(Error(error.message))
       return Result.fail<QueryError>(queryError)
     }
 
-    return Result.success(undefined)
+    return Result.success(data)
   }
   
   getAll(filter?: unknown): Promise<unknown> {
