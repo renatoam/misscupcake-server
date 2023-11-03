@@ -91,10 +91,6 @@ export class AddToCartUseCase implements CartUseCase<AddToCartRequestDTO> {
       return Result.fail(cartItemsOrError.getError())
     }
 
-    const cartItems = newCartItemsOrError.map(item => item.getValue())
-    const cart = cartOrError.getValue()
-    cart.setItems(cartItems)
-
-    return Result.success(cart)
+    return Result.success(newCartOrError.getValue())
   }
 }
