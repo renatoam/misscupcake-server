@@ -1,6 +1,6 @@
-import { BareItemDTO } from "@cart/domain/entities/CartProps"
+import { BareItemDTO } from "./SimpleItemsDTO"
 
 export interface UpdateCartRequestDTO {
-  accountId: string
+  cartId: string
   cartItems: BareItemDTO[]  
 }
