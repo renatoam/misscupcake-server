@@ -32,21 +32,7 @@ export class SupabaseCartRepository implements CartRepository {
       }
 
       const cart = result[0]
-      const { data: cartItems, error: cartItemsError } = await supabase
-        .from('cart_item')
-        .select('*')
-        .eq('cart_id', cart.id)
-
-      if (cartItemsError) {
-        const queryError = new QueryError(Error(cartItemsError.message))
-        return Result.fail<QueryError>(queryError)
-      }
-
-      const incomingCart = {
-        ...cart,
-        items: cartItems
-      }
-      const adaptedCartOrError = this.mapper.toDomain(incomingCart)
+      const adaptedCartOrError = this.mapper.toDomain(cart)
 
       if (adaptedCartOrError.isError()) {
         return Result.fail(adaptedCartOrError.getError())

@@ -1,6 +1,8 @@
 import cors from "cors";
 import dotenv from "dotenv";
 import Express, { Router } from "express";
+import { createServer } from "http";
+// import { Server } from 'socket.io'
 
 interface AppProps {
   connections: Function[]
@@ -25,16 +27,36 @@ function app({ connections, router }: AppProps) {
     connect()
   })
 
-  const server = Express()
+  const express = Express()
 
-  server.use(Express.json())
-  server.use(cors({
+  express.use(Express.json())
+  express.use(cors({
     origin: corsOrigin
   }))
 
-  server.use('/missapi/v1', router)
+  express.use('/missapi/v1', router)
 
-  server.use(Express.static('public'))
+  express.use(Express.static('public'))
+
+  const server = createServer(express)
+  // const io = new Server(server, {
+  //   cors: {
+  //     origin: "*"
+  //   }
+  // })
+
+  // io.on('connection', (socket) => {
+  //   console.log('User connected: ', socket.id)
+    
+  //   socket.on('disconnect', () => {
+  //     console.log('User disconnected: ', socket.id)
+  //   })
+
+  //   socket.on('message', message => {
+  //     console.log('Received', message)
+  //     // socket.broadcast.emit('message', message)
+  //   })
+  // })
   
   return server
 }

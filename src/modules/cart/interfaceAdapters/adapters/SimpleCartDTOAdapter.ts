@@ -19,6 +19,7 @@ export function simpleCartItemDTOAdapter(cartItem: CartItem): SimpleCartItemResp
     name: cartItem.name,
     image: cartItem.image,
     quantity: cartItem.quantity,
-    total: cartItem.total()
+    total: cartItem.total(),
+    unitPrice: cartItem.unitPrice
   }
 }

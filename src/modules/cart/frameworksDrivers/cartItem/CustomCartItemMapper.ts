@@ -6,7 +6,19 @@ import { CartItemMapper } from "./CartItemMapper";
 
 export class CustomCartItemMapper implements CartItemMapper<CartItemPersistence> {
   toDomain(raw: CartItemPersistence): Result<CartItem, Error> {
-    throw new Error("Method not implemented.");
+    const cartItemOrError = CartItem.create({
+      id: raw.id,
+      cartId: raw.cart_id,
+      productId: raw.product_id,
+      quantity: raw.quantity,
+      message: raw.message
+    })
+
+    if (cartItemOrError.isError()) {
+      return Result.fail(cartItemOrError.getError())
+    }
+
+    return cartItemOrError
   }
   
   toDTO<Source, DTO>(source: Source, adapter: Adapter<Source, DTO>): Result<DTO, Error> {

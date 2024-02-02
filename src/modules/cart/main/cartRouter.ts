@@ -15,7 +15,7 @@ cartRouter.post('/create', addToCart)
 // so I'm adding a new discount field into cart dto. This should represent some sort of coupon or similar
 // I won't create any new field in table, just calculate it on the fly. I can create a discount/deals service later
 // I need to do the same for the addToCart use case as well
-cartRouter.put('/update', async (request: Request, response: Response) => {
+cartRouter.put('/update', (request: Request, response: Response) => {
   const { cartId, cartItems } = request.body as UpdateCartRequestDTO
 
   if (!cartId) {
@@ -52,11 +52,11 @@ cartRouter.delete('/delete/:id', async (request: Request, response: Response) =>
     if (error) {
       return response.status(500).json('Something went wrong on deleting cart.')
     }
+
+    return response.status(204).end()
   } catch (error) {
     return response.status(500).json('Something went wrong on deleting cart.')
   }
-
-  return response.status(204)
 })
 
 export default cartRouter

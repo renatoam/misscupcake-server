@@ -18,19 +18,21 @@ export class Cart extends Entity<CartProps> {
   private getSubtotal(): number {
     if (!this.props.items) return 0
 
-    return this.props.items.reduce((acc, item) => {
-      acc += item.unitPrice * item.quantity
+    const res = this.props.items.reduce((acc, item) => {
+      acc = acc + (item.unitPrice ? (item.unitPrice * item.quantity) : 0)
       return acc
     }, 0)
+    return res
   }
 
   private getTotalDiscountAmount(): number {
     if (!this.props.items) return 0
 
-    return this.props.items.reduce((acc, item) => {
+    const res = this.props.items.reduce((acc, item) => {
       acc += item.discountAmount ? item.discountAmount * item.quantity : 0
       return acc
     }, 0)
+    return res
   }
 
   public setItems(items: CartItem[]) {
@@ -54,7 +56,7 @@ export class Cart extends Entity<CartProps> {
   }
   
   public get items(): CartItem[] {
-    return this.props.items || []
+    return this.props.items ?? []
   }
 
   public get accountId(): UniqueEntityID {

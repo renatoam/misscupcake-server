@@ -7,32 +7,35 @@ import { AddToCartController } from "./AddToCartController";
 import { AddToCartUseCase } from "@cart/useCases/addToCart/AddToCartUseCase";
 import { SupabaseCartRepository } from "@cart/frameworksDrivers/repositories/SupabaseCartRepository";
 import { CustomCartMapper } from "@cart/frameworksDrivers/mappers/CustomCartMapper";
-import { CustomCartItemRepository } from "@cart/frameworksDrivers/cartItem/CustomCartItemRepository";
+import { SupabaseCartItemRepository } from "@cart/frameworksDrivers/cartItem/SupabaseCartItemRepository";
 import { CustomCartItemMapper } from "@cart/frameworksDrivers/cartItem/CustomCartItemMapper";
 import { CustomProductMapper } from "@product/frameworksDrivers/mappers/CustomProductMapper";
 import { SupabaseProductRepository } from "@product/frameworksDrivers/repositories/SupabaseProductRepository";
 import { GetActiveCartUseCase } from "@cart/useCases/GetActiveCartUseCase";
 import { SimpleCartResponseDTO } from "@cart/interfaceAdapters/dtos/SimpleCartDTO";
 
-const router = Router()
-const appServer = createServer({
-  connections: [vitest.fn()],
-  router
-})
+const appRouter = Router()
+const cartsRouter = Router()
 
 const cartMapper = new CustomCartMapper()
 const cartItemMapper = new CustomCartItemMapper()
 const productMapper = new CustomProductMapper()
 
 const cartRepository = new SupabaseCartRepository(cartMapper)
-const cartItemRepository = new CustomCartItemRepository(cartItemMapper)
+const cartItemRepository = new SupabaseCartItemRepository(cartItemMapper)
 const productRepository = new SupabaseProductRepository(productMapper)
 
 const addToCartUseCase = new AddToCartUseCase(cartRepository, cartItemRepository, productRepository)
-const getActiveCartUseCase = new GetActiveCartUseCase(cartRepository)
+const getActiveCartUseCase = new GetActiveCartUseCase(cartRepository, cartItemRepository, productRepository)
+const addToCartController = new AddToCartController(getActiveCartUseCase, addToCartUseCase)
 
-router.post('/carts/create', new AddToCartController(getActiveCartUseCase, addToCartUseCase).handle)
-const server = appServer.use('/api/v1', router)
+cartsRouter.post('/carts/create', addToCartController.handle)
+appRouter.use('/api/v1', cartsRouter)
+
+const server = createServer({
+  connections: [vitest.fn()],
+  router: appRouter
+})
 
 describe('AddToCartController', () => {
   const validProduct = { id: 'b0d94dbd-1675-4fc5-bbb6-b13396d73fec', quantity: 23 }

@@ -33,11 +33,11 @@ export class CartItem extends Entity<CartItemProps> {
     this.props.cartId = id.toString()
   }
 
-  public get name(): string {
+  public get name(): string | undefined {
     return this.props.name
   }
 
-  public get image(): string {
+  public get image(): string | undefined {
     return this.props.image
   }
   
@@ -53,8 +53,12 @@ export class CartItem extends Entity<CartItemProps> {
     this.props.quantity = newQuantity
   }
   
-  public get unitPrice(): number {
+  public get unitPrice(): number | undefined {
     return this.props.unitPrice
+  }
+
+  public setUnitPrice(price: number): void {
+    this.props.unitPrice = price
   }
   
   public get finalPrice(): number {

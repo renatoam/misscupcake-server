@@ -1,7 +1,8 @@
 import { UniqueEntityID } from "@shared/domain/UniqueEntityID";
 import { supabase } from "@shared/frameworksDrivers/supabase";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { CustomCartItemRepository } from "./CustomCartItemRepository";
+import { SupabaseCartItemRepository } from "./SupabaseCartItemRepository";
+import { CustomCartItemMapper } from "./CustomCartItemMapper";
 
 describe.only('CustomCartItemRepository', () => {
   const cartId = new UniqueEntityID()
@@ -75,9 +76,11 @@ describe.only('CustomCartItemRepository', () => {
       throw Error('Error on creating cart item.')
     }
 
-    const cartItemRepository = new CustomCartItemRepository()
+    const cartItemMapper = new CustomCartItemMapper()
+    const cartItemRepository = new SupabaseCartItemRepository(cartItemMapper)
     const persistenceCartItem = await cartItemRepository.getItemsByCartId(cartId)
+    const item = persistenceCartItem.getValue()
 
-    expect(persistenceCartItem.id).toBe(cartItem?.id)
+    expect(item[0].cartItemId).toBe(cartItem?.id)
   })
 })

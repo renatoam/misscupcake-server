@@ -7,7 +7,7 @@ import { AddToCartUseCase } from "../useCases/addToCart/AddToCartUseCase"
 import { AddToCartController } from "../interfaceAdapters/controllers/addToCart/AddToCartController"
 import { HttpRequest, HttpResponse } from "@shared/types/httpTypes"
 import { AddToCartRequestDTO } from "../interfaceAdapters/dtos/AddToCartDTO"
-import { CustomCartItemRepository } from "@cart/frameworksDrivers/cartItem/CustomCartItemRepository"
+import { SupabaseCartItemRepository } from "@cart/frameworksDrivers/cartItem/SupabaseCartItemRepository"
 import { CustomCartItemMapper } from "@cart/frameworksDrivers/cartItem/CustomCartItemMapper"
 
 const cartMapper = new CustomCartMapper()
@@ -15,10 +15,14 @@ const cartItemMapper = new CustomCartItemMapper()
 const productMapper = new CustomProductMapper()
 
 const cartRepository = new SupabaseCartRepository(cartMapper)
-const cartItemRepository = new CustomCartItemRepository(cartItemMapper)
+const cartItemRepository = new SupabaseCartItemRepository(cartItemMapper)
 const productRepository = new SupabaseProductRepository(productMapper)
 
-const getActiveCartUseCase = new GetActiveCartUseCase(cartRepository)
+const getActiveCartUseCase = new GetActiveCartUseCase(
+  cartRepository,
+  cartItemRepository,
+  productRepository
+)
 const addToCartUseCase = new AddToCartUseCase(cartRepository, cartItemRepository, productRepository)
 
 const addToCartController = new AddToCartController(getActiveCartUseCase, addToCartUseCase)

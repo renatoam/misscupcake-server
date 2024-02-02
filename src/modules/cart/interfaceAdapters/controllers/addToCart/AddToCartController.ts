@@ -2,7 +2,7 @@ import { Controller } from "@shared/domain/ports/Controller";
 import { simpleCartDTOAdapter } from "@cart/interfaceAdapters/adapters/SimpleCartDTOAdapter";
 import IncomingID from "@shared/domain/IncomingID";
 import { SimpleProduct } from "@cart/domain/entities/SimpleProduct";
-import { ConflictError } from "@shared/errors";
+import { ClientError, ConflictError } from "@shared/errors";
 import { errorResponseHandler } from "@shared/errors/ErrorHandler";
 import { ok } from "@shared/interfaceAdapters/httpResponseHandlers";
 import { HttpRequest, HttpResponse } from "@shared/types/httpTypes";
@@ -33,7 +33,8 @@ export class AddToCartController implements Controller {
     const errorHandler = errorResponseHandler(response)
 
     if (accountIdOrError.isError() || productsOrError.isError()) {
-      return response.status(400).json()
+      const error = accountIdOrError.getError() ?? productsOrError.getError()
+      return errorHandler(new ClientError(Error(error.message)))
     }
 
     const activeCartOrError = await this.getActiveCartUseCase.execute(accountId)

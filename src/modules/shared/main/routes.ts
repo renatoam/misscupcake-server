@@ -6,6 +6,7 @@ import accountRouter from "src/modules/account/accountRouter";
 
 const router = Router()
 
+router.get('/', (_, res: any) => res.send('Foi'))
 router.use('/products', productRouter)
 router.use('/content', contentRouter)
 router.use('/carts', cartRouter)
