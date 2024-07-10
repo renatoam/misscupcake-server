@@ -10,9 +10,13 @@ interface AppProps {
 }
 
 function checkOrigin(origin?: string, cb?: Function) {
-  if (!origin || !cb) return
-  if (origin?.includes(process.env.CLIENT_URL ?? '')) cb(null, { origin: true } as any)
-  else cb(Error('CORS error: origin not allowed.', { origin: false } as any))
+  if (!cb) return new Error('Cors error.')
+  
+  if (!origin?.includes(process.env.CLIENT_URL ?? '') || !origin) {
+    return cb(null, { origin: true })
+  }
+  
+  cb(new Error('CORS error: origin not allowed.'), { origin: false })
 }
 
 function app({ connections, router }: AppProps) {
