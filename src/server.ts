@@ -39,6 +39,7 @@ function app({ connections, router }: AppProps) {
   }))
 
   express.use('/missapi/v1', router)
+  express.use('/health', (_, res) => res.send('Miss API is running.'))
 
   express.use(Express.static('public'))
 
